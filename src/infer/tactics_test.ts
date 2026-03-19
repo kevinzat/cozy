@@ -345,6 +345,24 @@ describe('tactics', function() {
     assert.throws(() => new Algebra(ENV, ParseProp("a + c = 0"), eq1, eq2), InvalidTactic);
   });
 
+  it('algebra – constant equations, no variables', function() {
+    CheckTactic(ENV, new Algebra(ENV, ParseProp("0 = 0")), []);
+    CheckTactic(ENV, new Algebra(ENV, ParseProp("2 + 3 = 5")), []);
+
+    assert.throws(() => new Algebra(ENV, ParseProp("1 = 2")), InvalidTactic);
+    assert.throws(() => new Algebra(ENV, ParseProp("2 + 3 = 6")), InvalidTactic);
+  });
+
+  it('algebra – constant inequalities, no variables', function() {
+    CheckTactic(ENV, new Algebra(ENV, ParseProp("0 <= 1")), []);
+    CheckTactic(ENV, new Algebra(ENV, ParseProp("3 < 5")), []);
+    CheckTactic(ENV, new Algebra(ENV, ParseProp("7 <= 7")), []);
+
+    assert.throws(() => new Algebra(ENV, ParseProp("5 <= 3")), InvalidTactic);
+    assert.throws(() => new Algebra(ENV, ParseProp("3 < 3")), InvalidTactic);
+    assert.throws(() => new Algebra(ENV, ParseProp("10 < 2")), InvalidTactic);
+  });
+
   it('induction', function() {
     const prop1 = ParseProp("forall n, 0 <= n -> P(n)");
     const prop2 = ParseProp("P(0)");

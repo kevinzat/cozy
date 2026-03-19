@@ -26,6 +26,11 @@ export function IsEquationImplied(eqs: Predicate[], eq: Predicate): boolean {
       (s) => _MakeEquation(s[0], s[1], indexes));
   const eqn = _MakeEquation(eq_sides[0], eq_sides[1], indexes);
 
+  // With no premises, the equation is implied only if it is a tautology.
+  if (eqns.length === 0) {
+    return eqn.coefs.every(c => c === 0n) && eqn.value === 0n;
+  }
+
   const result = IsImplied(eqns, eqn);
   return result === true;
 }

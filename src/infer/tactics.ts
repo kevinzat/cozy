@@ -1,10 +1,11 @@
 import {
     Predicate, Proposition, Disjunction, Conjunction, Negation, Implication,
-    SplitQuantifiers, RenameQuantifiers, UniquifyQuantifiers, IsEquation
+    SplitQuantifiers, RenameQuantifiers, UniquifyQuantifiers, IsEquation, IsInequality
   } from '../facts/props';
 import { UnifyProps } from '../facts/unify';
 import { UserError } from '../facts/user_error';
 import { IsEquationImplied } from '../decision/equation';
+import { IsInequalityImplied } from '../decision/inequality';
 import { Call, Constant, EXPR_CONSTANT, EXPR_VARIABLE, Expression, Variable } from '../facts/exprs';
 import { Biconditional, Exists, ForAll } from '../facts/props';
 import { CheckEquivalent } from '../decision/equivalent';
@@ -1127,7 +1128,7 @@ export class Apply extends Tactic {
 }
 
 
-/** Generates the goal equation from other equations. */
+/** Generates the goal equation or inequality from other equations/inequalities. */
 export class Algebra extends Tactic {
   known: Predicate[];
 
@@ -1138,28 +1139,39 @@ export class Algebra extends Tactic {
       this.checkVarsInProp(prop);
     }
 
-    if (!IsEquation(goal)) {
+    if (!IsEquation(goal) && !IsInequality(goal)) {
       throw new InvalidTactic(TACTIC_ALGEBRA,
-          `${this.goal.to_string()} is not an equation`);
+          `${this.goal.to_string()} is not an equation or inequality`);
     }
-    const eq = this.goal as Predicate;
+    const pred = this.goal as Predicate;
 
-    const eqs: Predicate[] = [];
+    const preds: Predicate[] = [];
     for (const prop of props) {
-      if (IsEquation(prop)) {
-        eqs.push(prop as Predicate);
+      if (IsEquation(prop) || IsInequality(prop)) {
+        preds.push(prop as Predicate);
       } else {
         throw new InvalidTactic(TACTIC_ALGEBRA,
-            `${prop.to_string()} is not an equation`);
+            `${prop.to_string()} is not an equation or inequality`);
       }
     }
 
-    if (!IsEquationImplied(eqs, eq)) {
-      throw new InvalidTactic(TACTIC_ALGEBRA,
-          `${this.goal.to_string()} does not appear to follow from the given equations`);
+    // Decide whether to use inequality or equation solver.
+    const useInequality = IsInequality(goal) ||
+        preds.some((p) => IsInequality(p));
+
+    if (useInequality) {
+      if (!IsInequalityImplied(preds, pred)) {
+        throw new InvalidTactic(TACTIC_ALGEBRA,
+            `${this.goal.to_string()} does not appear to follow from the given facts`);
+      }
+    } else {
+      if (!IsEquationImplied(preds, pred)) {
+        throw new InvalidTactic(TACTIC_ALGEBRA,
+            `${this.goal.to_string()} does not appear to follow from the given equations`);
+      }
     }
 
-    this.known = eqs;
+    this.known = preds;
   }
 
   premises(): Proposition[] {

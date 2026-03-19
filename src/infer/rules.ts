@@ -1,6 +1,6 @@
 import {
     Proposition, Conjunction, Disjunction, Negation, Implication, Biconditional,
-    ForAll, Exists, Quantifier, Predicate, IsEquation, PRED_SUBSET,
+    ForAll, Exists, Quantifier, Predicate, IsEquation, IsInequality, PRED_SUBSET,
     PRED_SAME_SET, UniquifyQuantifiers, NewVarNameVariation
   } from "../facts/props";
 import { UnifyProps } from '../facts/unify';
@@ -14,6 +14,7 @@ import {
     EXPR_CONSTANT, 
   } from '../facts/exprs';
 import { IsEquationImplied } from '../decision/equation';
+import { IsInequalityImplied } from '../decision/inequality';
 import { CheckEquivalent } from '../decision/equivalent';
 import { Environment, SubproofEnv, TopLevelEnv, TrailingEnv } from "./env";
 
@@ -1449,45 +1450,58 @@ export class Definition extends Rule {
 }
 
 
-/** Generates an equation if it follows from other known equations. */
+/** Generates an equation or inequality if it follows from other known facts. */
 export class Algebra extends Rule {
-  eq: Predicate;  // equality to prove
-  known: Rule[];  // list of known equations
-  
+  eq: Predicate;  // equation/inequality to prove
+  known: Rule[];  // list of known equations/inequalities
+
   constructor(env: Environment, eq: Proposition, ...known: Rule[]) {
     super(RULE_ALGEBRA, env);
 
     this.checkVarsInProp(eq);
 
-    // Make sure the rule to be proven is an equation.
-    if (!IsEquation(eq)) {
+    // Make sure the fact to be proven is an equation or inequality.
+    if (!IsEquation(eq) && !IsInequality(eq)) {
       throw new InvalidRule(RULE_ALGEBRA,
-          `first argument to algebra must be an equation, not ${eq.to_string()}`);
+          `first argument to algebra must be an equation or inequality, not ${eq.to_string()}`);
     }
 
-    // Make sure all the cited facts are equations.
-    const known_eqs: Predicate[] = [];
+    // Make sure all the cited facts are equations or inequalities.
+    const known_preds: Predicate[] = [];
     for (const eqn of known) {
-      if (!IsEquation(eqn.apply())) {
+      if (!IsEquation(eqn.apply()) && !IsInequality(eqn.apply())) {
         throw new InvalidRule(RULE_ALGEBRA,
-            `all arguments to algebra must be equations, not ${eqn.apply().to_string()}`);
+            `all arguments to algebra must be equations or inequalities, not ${eqn.apply().to_string()}`);
       }
-      known_eqs.push(eqn.apply() as Predicate);
+      known_preds.push(eqn.apply() as Predicate);
     }
 
-    // Add an irrelevant equation if none was given.
-    if (known_eqs.length === 0) {
-      const varNames = Array.from((eq as Predicate).free_vars());
-      const varName = (varNames.length === 0) ? props.NewVarName() : varNames[0];
-      const varExpr = new Variable(varName);
-      known_eqs.push(Predicate.equal(varExpr, varExpr));
-    }
+    // Decide whether to use inequality or equation solver.
+    const useInequality = IsInequality(eq) ||
+        known_preds.some((p) => IsInequality(p));
 
-    // Make sure the former equations imply the latter...
-    if (!IsEquationImplied(known_eqs, eq as Predicate)) {
-      const eqns = known_eqs.map((eqn) => eqn.to_string())
-      throw new InvalidRule(RULE_ALGEBRA,
-          `${eq.to_string()} does not appear to be implied by the cited equations: ${eqns.join(" | ")}`);
+    if (useInequality) {
+      if (!IsInequalityImplied(known_preds, eq as Predicate)) {
+        const facts = known_preds.map((p) => p.to_string());
+        throw new InvalidRule(RULE_ALGEBRA,
+            `${eq.to_string()} does not appear to be implied by the cited facts: ${facts.join(" | ")}`);
+      }
+    } else {
+      // Pure equations: add an irrelevant equation if none was given so the
+      // Smith normal form solver has something to work with.
+      const eqs = known_preds.slice(0);
+      if (eqs.length === 0) {
+        const varNames = Array.from((eq as Predicate).free_vars());
+        const varName = (varNames.length === 0) ? props.NewVarName() : varNames[0];
+        const varExpr = new Variable(varName);
+        eqs.push(Predicate.equal(varExpr, varExpr));
+      }
+
+      if (!IsEquationImplied(eqs, eq as Predicate)) {
+        const facts = eqs.map((eqn) => eqn.to_string());
+        throw new InvalidRule(RULE_ALGEBRA,
+            `${eq.to_string()} does not appear to be implied by the cited equations: ${facts.join(" | ")}`);
+      }
     }
 
     this.eq = eq as Predicate;

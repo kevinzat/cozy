@@ -473,6 +473,32 @@ describe('rules', function() {
     assert.strictEqual(res4.apply().to_string(), "1 - 1 = 0");
   });
 
+  it('algebra – constant equations, no variables', function() {
+    const res1 = new Algebra(ENV, ParseProp("0 = 0"));
+    assert.strictEqual(res1.apply().to_string(), "0 = 0");
+
+    const res2 = new Algebra(ENV, ParseProp("2 + 3 = 5"));
+    assert.strictEqual(res2.apply().to_string(), "2 + 3 = 5");
+
+    assert.throws(() => new Algebra(ENV, ParseProp("1 = 2")), InvalidRule);
+    assert.throws(() => new Algebra(ENV, ParseProp("2 + 3 = 6")), InvalidRule);
+  });
+
+  it('algebra – constant inequalities, no variables', function() {
+    const res1 = new Algebra(ENV, ParseProp("0 <= 1"));
+    assert.strictEqual(res1.apply().to_string(), "0 <= 1");
+
+    const res2 = new Algebra(ENV, ParseProp("3 < 5"));
+    assert.strictEqual(res2.apply().to_string(), "3 < 5");
+
+    const res3 = new Algebra(ENV, ParseProp("7 <= 7"));
+    assert.strictEqual(res3.apply().to_string(), "7 <= 7");
+
+    assert.throws(() => new Algebra(ENV, ParseProp("5 <= 3")), InvalidRule);
+    assert.throws(() => new Algebra(ENV, ParseProp("3 < 3")), InvalidRule);
+    assert.throws(() => new Algebra(ENV, ParseProp("10 < 2")), InvalidRule);
+  });
+
   it('induction', function() {
     const assn1 = new Given(ENV, ParseProp("P(0)"));
     const assn2 = new Given(ENV, ParseProp("forall n, P(n) -> P(n+1)"));
