@@ -34,7 +34,7 @@ export function IsEquationImplied(eqs: Predicate[], eq: Predicate): boolean {
  * Adds a unique index for each term appearing in the given sum. Indexes will
  * start at zero and constitute a continuous integer range.
  */
-function _AddIndexes(expr: Expression, indexes: Map<string, number>): void {
+export function _AddIndexes(expr: Expression, indexes: Map<string, number>): void {
   for (const term of _GetTerms(expr)) {
     if (term[1] !== undefined && !indexes.has(term[1]))
       indexes.set(term[1], indexes.size);
@@ -45,7 +45,7 @@ function _AddIndexes(expr: Expression, indexes: Map<string, number>): void {
  * Returns the equation (left = right) as a LinearEquation by placing terms
  * at the indexes in the given map, which should range from 0 .. indexes.size-1.
  */
-function _MakeEquation(
+export function _MakeEquation(
     left: Expression, right: Expression, indexes: Map<string, number>): LinearEquation {
 
   let value = 0n;
@@ -92,7 +92,7 @@ function _MakeEquation(
  * Returns each term in the given expression, split into a constant factor and
  * the rest of the expression, if any, as a string.
  */
-function _GetTerms(expr: Expression): [bigint, string|undefined][] {
+export function _GetTerms(expr: Expression): [bigint, string|undefined][] {
   // If this is not a sum, then turn it into one to reduce this to one case.
   if (expr.variety !== EXPR_FUNCTION ||
       (expr as Call).name !== FUNC_ADD) {
