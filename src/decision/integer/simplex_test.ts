@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import Tableau from './tableau';
-import { FirstProfitable, LimitingRow, Pivot, SimplexMethod, TwoPhaseSimplexMethod } from './simplex';
+import { FirstProfitable, IsImplied, LimitingRow, LinearInequality, Pivot, SimplexMethod, TwoPhaseSimplexMethod } from './simplex';
+import { LinearEquation } from './smith';
 import Fraction from './fraction';
 
 
@@ -776,6 +777,214 @@ describe('simplex', function() {
       let A = new Tableau([[1n, 0n], [0n, 1n]], [1n, 1n]);
       assert.throws(() => TwoPhaseSimplexMethod(A, [1n]),
           /wrong size for c/);
+    });
+  });
+
+  // ---- IsImplied (inequality) ----
+
+  /** Shorthand constructors for tests. */
+  function eq(coefs: bigint[], value: bigint): LinearEquation {
+    return { coefs, value };
+  }
+  function ineq(coefs: bigint[], value: bigint): LinearInequality {
+    return { coefs, value };
+  }
+
+  describe('IsImplied', function() {
+
+    // -- Equations only --
+
+    it('equation forces exact value: x + y = 5 implies x + y >= 5', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n, 1n], 5n)], [],
+          ineq([1n, 1n], 5n)), true);
+    });
+
+    it('equation forces exact value: x + y = 5 does not imply x + y >= 6', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n, 1n], 5n)], [],
+          ineq([1n, 1n], 6n)), false);
+    });
+
+    it('fully determined system: x=3, y=2 implies x + y >= 4', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n, 0n], 3n), eq([0n, 1n], 2n)], [],
+          ineq([1n, 1n], 4n)), true);
+    });
+
+    it('fully determined system: x=3, y=2 does not imply x + y >= 6', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n, 0n], 3n), eq([0n, 1n], 2n)], [],
+          ineq([1n, 1n], 6n)), false);
+    });
+
+    it('single free variable: x + y = 5 does not imply x >= 3 (x can be < 3)', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n, 1n], 5n)], [],
+          ineq([1n, 0n], 3n)), false);
+    });
+
+    it('contradictory equations: x=3, x=5 vacuously implies anything', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n], 3n), eq([1n], 5n)], [],
+          ineq([1n], 100n)), true);
+    });
+
+    it('Gomory detects integer infeasibility: 2x=3 implies x >= 2 (vacuously)', function() {
+      // 2x = 3 has no integer solution. LP min = 3/2 < 2, but Gomory cuts
+      // detect infeasibility.
+      assert.strictEqual(IsImplied(
+          [eq([2n], 3n)], [],
+          ineq([1n], 2n)), true);
+    });
+
+    it('Gomory detects integer infeasibility: 2x=3 implies x >= 1 (LP suffices)', function() {
+      // LP min = 3/2 >= 1, no cuts needed.
+      assert.strictEqual(IsImplied(
+          [eq([2n], 3n)], [],
+          ineq([1n], 1n)), true);
+    });
+
+    // -- Inequalities only --
+
+    it('x >= 3 implies x >= 2', function() {
+      assert.strictEqual(IsImplied(
+          [], [ineq([1n], 3n)],
+          ineq([1n], 2n)), true);
+    });
+
+    it('x >= 3 does not imply x >= 5', function() {
+      assert.strictEqual(IsImplied(
+          [], [ineq([1n], 3n)],
+          ineq([1n], 5n)), false);
+    });
+
+    it('x + y >= 5, x - y >= 1 implies x >= 3', function() {
+      // Adding: 2x >= 6, so x >= 3.
+      assert.strictEqual(IsImplied(
+          [], [ineq([1n, 1n], 5n), ineq([1n, -1n], 1n)],
+          ineq([1n, 0n], 3n)), true);
+    });
+
+    it('x + y >= 5, x - y >= 1 does not imply x >= 4', function() {
+      // x=3, y=2 satisfies both premises but not x >= 4.
+      assert.strictEqual(IsImplied(
+          [], [ineq([1n, 1n], 5n), ineq([1n, -1n], 1n)],
+          ineq([1n, 0n], 4n)), false);
+    });
+
+    it('contradictory inequalities: x >= 3, x <= 1 vacuously implies anything', function() {
+      assert.strictEqual(IsImplied(
+          [], [ineq([1n], 3n), ineq([-1n], -1n)],
+          ineq([1n], 100n)), true);
+    });
+
+    it('Gomory cuts with inequality: 2x >= 3 implies x >= 2', function() {
+      // Integer x with 2x >= 3: smallest is x=2. LP gives 3/2, needs cuts.
+      assert.strictEqual(IsImplied(
+          [], [ineq([2n], 3n)],
+          ineq([1n], 2n)), true);
+    });
+
+    it('Gomory cuts with inequality: 2x >= 3 does not imply x >= 3', function() {
+      // Smallest integer x with 2x >= 3 is x=2. 2 < 3.
+      assert.strictEqual(IsImplied(
+          [], [ineq([2n], 3n)],
+          ineq([1n], 3n)), false);
+    });
+
+    it('multiple inequalities: 2x + 2y >= 2 from x >= 0, y >= 0, x + y >= 1', function() {
+      assert.strictEqual(IsImplied(
+          [], [ineq([1n, 0n], 0n), ineq([0n, 1n], 0n), ineq([1n, 1n], 1n)],
+          ineq([2n, 2n], 2n)), true);
+    });
+
+    // -- Mixed equations and inequalities --
+
+    it('x + y = 6, x >= 2 implies y <= 4 (i.e., -y >= -4)', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n, 1n], 6n)], [ineq([1n, 0n], 2n)],
+          ineq([0n, -1n], -4n)), true);
+    });
+
+    it('x + y = 6, x >= 2 does not imply y <= 3 (i.e., -y >= -3)', function() {
+      // x=2, y=4: y <= 3 fails.
+      assert.strictEqual(IsImplied(
+          [eq([1n, 1n], 6n)], [ineq([1n, 0n], 2n)],
+          ineq([0n, -1n], -3n)), false);
+    });
+
+    it('equation + inequality: x = 5, x >= 3 implies x >= 5', function() {
+      assert.strictEqual(IsImplied(
+          [eq([1n], 5n)], [ineq([1n], 3n)],
+          ineq([1n], 5n)), true);
+    });
+
+    // -- Edge cases --
+
+    it('no constraints: 0 >= 0 is trivially true', function() {
+      assert.strictEqual(IsImplied([], [], ineq([0n], 0n)), true);
+    });
+
+    it('no constraints: 0 >= 1 is false', function() {
+      assert.strictEqual(IsImplied([], [], ineq([0n], 1n)), false);
+    });
+
+    it('no constraints: x >= 0 is not implied (x unrestricted)', function() {
+      assert.strictEqual(IsImplied([], [], ineq([1n], 0n)), false);
+    });
+
+    it('no constraints: 0 >= -1 is trivially true', function() {
+      assert.strictEqual(IsImplied([], [], ineq([0n], -1n)), true);
+    });
+
+    it('no variables: infeasible equation vacuously implies', function() {
+      assert.strictEqual(IsImplied(
+          [eq([], 5n)], [],
+          ineq([], 100n)), true);
+    });
+
+    it('no variables: 0 >= 0 with consistent system', function() {
+      assert.strictEqual(IsImplied(
+          [eq([], 0n)], [],
+          ineq([], 0n)), true);
+    });
+
+    it('throws on mismatched equation lengths', function() {
+      assert.throws(() => IsImplied(
+          [eq([1n, 2n], 3n)], [],
+          ineq([1n], 1n)), /mismatched/);
+    });
+
+    it('throws on mismatched inequality lengths', function() {
+      assert.throws(() => IsImplied(
+          [], [ineq([1n, 2n], 3n)],
+          ineq([1n], 1n)), /mismatched/);
+    });
+
+    // -- Larger problems --
+
+    it('3 equations determine unique point: 2x + y + z = 10, x + 3y = 11, y + z = 5', function() {
+      // Solution: from y+z=5 and 2x+y+z=10 → 2x+5=10 → x=5/2. Not integer!
+      // So system is infeasible over integers → vacuously true.
+      assert.strictEqual(IsImplied(
+          [eq([2n, 1n, 1n], 10n), eq([1n, 3n, 0n], 11n), eq([0n, 1n, 1n], 5n)],
+          [],
+          ineq([1n, 0n, 0n], 100n)), true);
+    });
+
+    it('scaling: 100x >= 200 implies x >= 2', function() {
+      assert.strictEqual(IsImplied(
+          [], [ineq([100n], 200n)],
+          ineq([1n], 2n)), true);
+    });
+
+    it('negative coefficients: -x <= -3 (i.e., x >= 3) implies x >= 2', function() {
+      // -x >= -3 means x <= 3, so x >= 2 is NOT implied (x=1 satisfies x <= 3).
+      // Let me fix: we want x >= 3 as premise, which is [1] >= 3.
+      assert.strictEqual(IsImplied(
+          [], [ineq([1n], 3n)],
+          ineq([1n], 2n)), true);
     });
   });
 

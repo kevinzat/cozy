@@ -1,6 +1,16 @@
 import Fraction from './fraction';
 import { ext_gcd, gcd } from './gcd';
+import { LinearEquation } from './smith';
 import Tableau from './tableau';
+
+/**
+ * Represents a linear inequality on variables x0, ..., xN given by coefs[0] * x0
+ * + coefs[1] * x1 + ... + coefs[N] * xN >= value.
+ */
+export interface LinearInequality {
+  coefs: bigint[];
+  value: bigint;
+}
 
 /**
  * Finds the point that minimizes the given cost function while satisfying the
@@ -233,6 +243,172 @@ export function TwoPhaseSimplexMethod(A: Tableau, c: bigint[]):
     return { status: 'unbounded' };
 
   return { status: 'optimal', cols: activeCols };
+}
+
+
+/** Returns the non-negative remainder of a divided by d (d > 0). */
+function positiveMod(a: bigint, d: bigint): bigint {
+  return ((a % d) + d) % d;
+}
+
+/**
+ * Determines whether a set of linear equations and inequalities implies a
+ * linear inequality over the integers. Uses the two-phase simplex method
+ * with Gomory cuts.
+ *
+ * Given equations a_i · x = b_i and inequalities a_j · x >= b_j, determines
+ * whether c · x >= d must hold for every integer solution x.
+ *
+ * Variables are unrestricted integers, handled via the substitution
+ * x_i = x_i⁺ − x_i⁻ with x_i⁺, x_i⁻ >= 0. Each input inequality adds a
+ * slack variable.
+ */
+export function IsImplied(
+    eqs: LinearEquation[], ineqs: LinearInequality[],
+    ineq: LinearInequality): boolean {
+  const n = ineq.coefs.length;
+  for (const eq of eqs) {
+    if (eq.coefs.length !== n)
+      throw new Error('mismatched coefficient lengths');
+  }
+  for (const iq of ineqs) {
+    if (iq.coefs.length !== n)
+      throw new Error('mismatched coefficient lengths');
+  }
+
+  // No variables.
+  if (n === 0) {
+    for (const eq of eqs) {
+      if (eq.value !== 0n) return true;  // infeasible, vacuously true
+    }
+    for (const iq of ineqs) {
+      if (iq.value > 0n) return true;  // 0 >= positive is infeasible
+    }
+    return ineq.value <= 0n;
+  }
+
+  // No constraints: variables unrestricted.
+  if (eqs.length === 0 && ineqs.length === 0) {
+    return ineq.coefs.every(c => c === 0n) && ineq.value <= 0n;
+  }
+
+  const numSlacks = ineqs.length;
+  const totalCols = 2 * n + numSlacks;
+
+  // Build initial tableau.
+  let currentEntries: bigint[][] = [];
+  let currentCol0: bigint[] = [];
+
+  // Equations: a · (x⁺ − x⁻) = b
+  for (const eq of eqs) {
+    const row = new Array(totalCols).fill(0n);
+    for (let j = 0; j < n; j++) {
+      row[j] = eq.coefs[j];
+      row[n + j] = -eq.coefs[j];
+    }
+    currentEntries.push(row);
+    currentCol0.push(eq.value);
+  }
+
+  // Inequalities: a · (x⁺ − x⁻) − s_k = b
+  for (let k = 0; k < ineqs.length; k++) {
+    const iq = ineqs[k];
+    const row = new Array(totalCols).fill(0n);
+    for (let j = 0; j < n; j++) {
+      row[j] = iq.coefs[j];
+      row[n + j] = -iq.coefs[j];
+    }
+    row[2 * n + k] = -1n;  // slack variable
+    currentEntries.push(row);
+    currentCol0.push(iq.value);
+  }
+
+  // Cost: minimize c · (x⁺ − x⁻). Slacks have zero cost.
+  const baseCost: bigint[] = new Array(totalCols).fill(0n);
+  for (let j = 0; j < n; j++) {
+    baseCost[j] = ineq.coefs[j];
+    baseCost[n + j] = -ineq.coefs[j];
+  }
+
+  // Gomory cutting plane loop.
+  for (let iter = 0; iter < 100; iter++) {
+    const A = new Tableau(
+        currentEntries.map(r => r.slice()),
+        currentCol0.slice());
+
+    // Pad cost with zeros for Gomory slack variables added in previous iterations.
+    const cost: bigint[] = new Array(A.n).fill(0n);
+    for (let j = 0; j < baseCost.length; j++)
+      cost[j] = baseCost[j];
+
+    const result = TwoPhaseSimplexMethod(A, cost);
+
+    if (result.status === 'infeasible') return true;   // vacuously true
+    if (result.status === 'unbounded') return false;
+
+    // Check if all basis variables are integer.
+    const cols = result.cols;
+    let fractionalRow = -1;
+
+    for (let i = 0; i < A.m; i++) {
+      const val = new Fraction(A.col0![i], A.entries[i][cols[i]]);
+      if (!val.is_integer()) {
+        fractionalRow = i;
+        break;
+      }
+    }
+
+    if (fractionalRow < 0) {
+      // Integer optimum found — compute objective and compare with ineq.value.
+      let obj = Fraction.ZERO;
+      for (let i = 0; i < A.m; i++) {
+        const xi = new Fraction(A.col0![i], A.entries[i][cols[i]]);
+        obj = obj.add(new Fraction(cost[cols[i]]).multiply(xi));
+      }
+      return !obj.is_less(new Fraction(ineq.value));
+    }
+
+    // Generate Gomory fractional cut from the fractional row.
+    //
+    // Row equation: D · x_B + Σ_j a_j · x_j = b  (j over non-basis)
+    // Dividing by D: x_B = b/D − Σ (a_j/D) · x_j
+    // For x_B integer: Σ frac(a_j/D) · x_j ≥ frac(b/D)
+    // Multiplied by D: Σ mod(a_j, D) · x_j − D·s = mod(b, D),  s ≥ 0
+    let D = A.entries[fractionalRow][cols[fractionalRow]];
+    let bRow = A.col0![fractionalRow];
+    const rowCoefs = A.entries[fractionalRow].slice();
+
+    if (D < 0n) {
+      D = -D;
+      bRow = -bRow;
+      for (let j = 0; j < rowCoefs.length; j++)
+        rowCoefs[j] = -rowCoefs[j];
+    }
+
+    const basisSet = new Set(cols);
+    const cutRow: bigint[] = new Array(A.n + 1).fill(0n);
+    for (let j = 0; j < A.n; j++) {
+      if (!basisSet.has(j))
+        cutRow[j] = positiveMod(rowCoefs[j], D);
+    }
+    cutRow[A.n] = -D;  // Gomory slack variable
+    const cutRHS = positiveMod(bRow, D);
+
+    // Add the cut to the system with a new slack column.
+    const newWidth = A.n + 1;
+    const newEntries: bigint[][] = [];
+    for (const row of currentEntries) {
+      const newRow: bigint[] = new Array(newWidth).fill(0n);
+      for (let j = 0; j < row.length; j++) newRow[j] = row[j];
+      newEntries.push(newRow);
+    }
+    newEntries.push(cutRow);
+
+    currentEntries = newEntries;
+    currentCol0 = [...currentCol0, cutRHS];
+  }
+
+  throw new Error('Gomory cut iteration limit exceeded');
 }
 
 
