@@ -1,5 +1,5 @@
 import Fraction from './fraction';
-import { ext_gcd } from './gcd';
+import { ext_gcd, gcd } from './gcd';
 import Tableau from './tableau';
 
 /**
@@ -107,19 +107,16 @@ export function Pivot(A: Tableau, cols: number[], row: number, col: number): voi
     if (i === row)
       continue;  // allowed to be non-zero
 
-    const col0 = cols[i];
+    if (A.entries[i][col] === 0n)
+      continue;  // already zero
 
-    while (A.entries[i][col] !== 0n) {
-      Zero(A, i, row, col);
-
-      // If this made a non-zero entry in A[row][col0], then we need to fix it.
-      if (A.entries[row][col0] === 0n)
-        break;  // already correct, so we're done
-
-      Zero(A, row, i, col0);
-
-      // Could have made A[i][col] nonzero again, so we need to repeat...
-    }
+    // Zero A[i][col] using one-sided elimination: only modify row i, never row.
+    // Since row is untouched, no other basis column in row is disturbed.
+    const a = A.entries[i][col];
+    const b = A.entries[row][col];
+    const d = gcd(a < 0n ? -a : a, b < 0n ? -b : b);
+    A.rowScale(i, b / d);
+    A.rowAddMultiple(i, row, -(a / d));
   }
 
   // If any row of col0 is negative, rescale it to be non-negative.
