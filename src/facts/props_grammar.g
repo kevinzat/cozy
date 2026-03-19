@@ -190,12 +190,12 @@ Term -> Term %times Factor
       {% ([a]) => a %}
 
 Factor -> Primary %exp %constant
-      {% ([a, b, c]) => new exprs.Call(exprs.FUNC_EXPONENTIATE, [a, new exprs.Constant(parseInt(c.text))]) %}
+      {% ([a, b, c]) => new exprs.Call(exprs.FUNC_EXPONENTIATE, [a, new exprs.Constant(BigInt(c.text))]) %}
     | Primary
       {% ([a]) => a %}
 
 Primary -> %constant
-      {% ([a]) => new exprs.Constant(parseInt(a.text)) %}
+      {% ([a]) => new exprs.Constant(BigInt(a.text)) %}
     | %variable
       {% ([a]) => new exprs.Variable(a.text) %}
     | %variable %lparen Exprs %rparen

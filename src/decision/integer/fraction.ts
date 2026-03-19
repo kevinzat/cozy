@@ -1,35 +1,39 @@
 import { gcd } from './gcd';
 
+function abs(a: bigint): bigint {
+  return a < 0n ? -a : a;
+}
+
 // Represents an immutable fraction numer/denom with denom != 0. These will
 // always maintain the invariants that denom > 0 and gcd(numer, denom) = 1.
 export default class Fraction {
 
-  static ZERO = new Fraction(0);
-  static ONE = new Fraction(1);
+  static ZERO = new Fraction(0n);
+  static ONE = new Fraction(1n);
 
-  numer: number;
-  denom: number;
+  numer: bigint;
+  denom: bigint;
 
   /**
    * Creates the fraction numer/denom.
    * @param numer Numerator of the fraction
    * @param denom Denominator of the fraction. Assumed 1 if not provided.
    */
-  constructor(numer: number, denom?: number) {
+  constructor(numer: bigint, denom?: bigint) {
     if (denom === undefined) {
-      denom = 1;
-    } else if (denom === 0) {
+      denom = 1n;
+    } else if (denom === 0n) {
       throw new Error("division by zero");
-    } else if (denom < 0) {
-      numer *= -1;
-      denom *= -1;
+    } else if (denom < 0n) {
+      numer *= -1n;
+      denom *= -1n;
     }
 
-    if (numer === 0) {
-      this.numer = 0;
-      this.denom = 1;
+    if (numer === 0n) {
+      this.numer = 0n;
+      this.denom = 1n;
     } else {
-      const d = gcd(Math.abs(numer), denom);
+      const d = gcd(abs(numer), denom);
       this.numer = numer / d;
       this.denom = denom / d;
     }
@@ -50,19 +54,19 @@ export default class Fraction {
   }
 
   is_integer(): boolean {
-    return this.denom === 1;
+    return this.denom === 1n;
   }
 
   to_string(): string {
-    if (this.denom === 1) {
+    if (this.denom === 1n) {
        return `${this.numer}`;
     } else {
        return `${this.numer}/${this.denom}`;
     }
   }
 
-  to_integer(): number {
-    if (this.denom !== 1)
+  to_integer(): bigint {
+    if (this.denom !== 1n)
       throw new Error(`not an integer: ${this.numer}/${this.denom}`);
     return this.numer;
   }
@@ -90,7 +94,7 @@ export default class Fraction {
   divide(other: Fraction): Fraction {
     return new Fraction(this.numer * other.denom, this.denom * other.numer);
   }
-  
+
   static compare(f: Fraction, g: Fraction): number {
     if (f.equals(g)) {
       return 0;

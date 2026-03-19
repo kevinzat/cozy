@@ -2,12 +2,12 @@
 export default class Tableau {
   m: number;  // number of regular rows
   n: number;  // number of regular columns
-  col0?: number[];  // extra column or missing
-  row0?: number[];  // extra row or missing
-  entries: number[][];  // values in each row,column
+  col0?: bigint[];  // extra column or missing
+  row0?: bigint[];  // extra row or missing
+  entries: bigint[][];  // values in each row,column
 
   // Requires: all entries are integers and all (> 0) rows have the same length.
-  constructor(vals: number[][], c0?: number[], r0?: number[]) {
+  constructor(vals: bigint[][], c0?: bigint[], r0?: bigint[]) {
     if (vals.length === 0)
       throw Error("rows are missing");
 
@@ -21,7 +21,7 @@ export default class Tableau {
     if (r0 !== undefined && r0.length !== vals[0].length)
       throw Error(`extra column has wrong length: ${r0.length} vs ${vals[0].length}`);
 
-    this.m = vals.length;    
+    this.m = vals.length;
     this.n = vals[0].length;
     this.col0 = (c0 !== undefined) ? c0.slice(0) : undefined;
     this.row0 = (r0 !== undefined) ? r0.slice(0) : undefined;
@@ -42,7 +42,7 @@ export default class Tableau {
   }
 
   /** Multiply the entries in row i by c. */
-  rowScale(i: number, c: number) {
+  rowScale(i: number, c: bigint) {
     for (let j = 0; j < this.n; j++) {
       this.entries[i][j] *= c;
     }
@@ -52,7 +52,7 @@ export default class Tableau {
   }
 
   /** Add row k times c to row i. */
-  rowAddMultiple(i: number, k: number, c: number) {
+  rowAddMultiple(i: number, k: number, c: bigint) {
     for (let j = 0; j < this.n; j++) {
       this.entries[i][j] += c * this.entries[k][j];
     }
@@ -77,7 +77,7 @@ export default class Tableau {
   }
 
   /** Multiply the entries in column j by c. */
-  colScale(j: number, c: number) {
+  colScale(j: number, c: bigint) {
     for (let i = 0; i < this.m; i++) {
       this.entries[i][j] *= c;
     }
@@ -87,7 +87,7 @@ export default class Tableau {
   }
 
   /** Add column k times c to column i. */
-  colAddMultiple(j: number, l: number, c: number) {
+  colAddMultiple(j: number, l: number, c: bigint) {
     for (let i = 0; i < this.m; i++) {
       this.entries[i][j] += c * this.entries[i][l];
     }

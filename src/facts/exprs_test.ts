@@ -3,9 +3,9 @@ import * as exprs from './exprs';
 import { Expression, Constant, Variable, Call } from './exprs';
 
 
-const zero = Constant.of(0);
-const one = Constant.of(1);
-const neg_one = Constant.of(-1);
+const zero = Constant.of(0n);
+const one = Constant.of(1n);
+const neg_one = Constant.of(-1n);
 
 const x = Variable.of("x");
 const y = Variable.of("y");
@@ -39,17 +39,17 @@ describe('exprs', function() {
 
   it('to_string', function() {
     assert.strictEqual(
-        Call.exponentiate(Variable.of("x"), Constant.of(10)).to_string(),
+        Call.exponentiate(Variable.of("x"), Constant.of(10n)).to_string(),
         "x^10");
     assert.strictEqual(
         Call.multiply(
-            Call.multiply(Constant.of(2), Variable.of("x")),
+            Call.multiply(Constant.of(2n), Variable.of("x")),
             Variable.of("y")).to_string(),
         "2*x*y");
     assert.strictEqual(
         Call.add(
-            Call.multiply(Constant.of(2), Variable.of("x")),
-            Call.multiply(Constant.of(3), Variable.of("y"))).to_string(),
+            Call.multiply(Constant.of(2n), Variable.of("x")),
+            Call.multiply(Constant.of(3n), Variable.of("y"))).to_string(),
         "2*x + 3*y");
     assert.strictEqual(
         Call.add(
@@ -59,7 +59,7 @@ describe('exprs', function() {
     assert.strictEqual(
         Call.exponentiate(
             Call.add(Variable.of("x"), Variable.of("y")),
-            Constant.of(3)).to_string(),
+            Constant.of(3n)).to_string(),
         "(x + y)^3");
     assert.strictEqual(
         Call.multiply(
@@ -68,8 +68,8 @@ describe('exprs', function() {
         "z*(x - y)");
     assert.strictEqual(
         Call.subtract(
-            Constant.of(7),
-            Call.add(Variable.of("y"), Constant.of(3))).to_string(),
+            Constant.of(7n),
+            Call.add(Variable.of("y"), Constant.of(3n))).to_string(),
         "7 - (y + 3)");
 
 
@@ -113,16 +113,16 @@ describe('exprs', function() {
   });
 
   it('var_revs', function() {
-    let expr = Call.exponentiate(Variable.of("x"), Constant.of(10));
+    let expr = Call.exponentiate(Variable.of("x"), Constant.of(10n));
     AssertEqualSets(expr.var_refs(), ["x"]);
 
     expr = Call.multiply(
-        Call.multiply(Constant.of(2), Variable.of("x")), Variable.of("y"));
+        Call.multiply(Constant.of(2n), Variable.of("x")), Variable.of("y"));
     AssertEqualSets(expr.var_refs(), ["x", "y"]);
 
     expr = Call.add(
-        Call.multiply(Constant.of(2), Variable.of("y")),
-        Call.multiply(Constant.of(3), Variable.of("x")));
+        Call.multiply(Constant.of(2n), Variable.of("y")),
+        Call.multiply(Constant.of(3n), Variable.of("x")));
     AssertEqualSets(expr.var_refs(), ["x", "y"]);
 
     expr = Call.add(
@@ -131,7 +131,7 @@ describe('exprs', function() {
     AssertEqualSets(expr.var_refs(), ["x", "y", "z"]);
 
     expr = Call.exponentiate(
-        Call.add(Variable.of("x"), Variable.of("z")), Constant.of(3));
+        Call.add(Variable.of("x"), Variable.of("z")), Constant.of(3n));
     AssertEqualSets(expr.var_refs(), ["x", "z"]);
 
     expr = Call.multiply(
@@ -142,7 +142,7 @@ describe('exprs', function() {
   it('subst', function() {
     const expr = Call.add(
         Call.subtract(Variable.of("x"),
-            Call.exponentiate(Variable.of("y"), Constant.of(3))),
+            Call.exponentiate(Variable.of("y"), Constant.of(3n))),
         Call.negate(Call.multiply(Variable.of("z"), Variable.of("y"))));
 
     assert.strictEqual(expr.to_string(), "x - y^3 + -z*y");
@@ -161,43 +161,43 @@ describe('exprs', function() {
         "x - z^3 + -z*z");
 
     assert.strictEqual(
-        expr.subst(Variable.of("x"), Constant.of(1)).to_string(),
+        expr.subst(Variable.of("x"), Constant.of(1n)).to_string(),
         "1 - y^3 + -z*y");
     assert.strictEqual(
-        expr.subst(Variable.of("y"), Constant.of(2)).to_string(),
+        expr.subst(Variable.of("y"), Constant.of(2n)).to_string(),
         "x - 2^3 + -z*2");
     assert.strictEqual(
-        expr.subst(Variable.of("y"), Constant.of(-3)).to_string(),
+        expr.subst(Variable.of("y"), Constant.of(-3n)).to_string(),
         "x - (-3)^3 + -z*(-3)");
 
     const from = Call.negate(
         Call.multiply(Variable.of("z"), Variable.of("y")));
-    const to = Call.exponentiate(Variable.of("y"), Constant.of(2));
+    const to = Call.exponentiate(Variable.of("y"), Constant.of(2n));
     assert.strictEqual(expr.subst(from, to).to_string(), "x - y^3 + y^2");
   });
 
   it('eval_constants', function() {
     const expr = Call.add(
-        Call.subtract(Constant.of(16),
-            Call.exponentiate(Constant.of(2), Constant.of(3))),
-        Call.negate(Call.multiply(Constant.of(2), Constant.of(3))));
+        Call.subtract(Constant.of(16n),
+            Call.exponentiate(Constant.of(2n), Constant.of(3n))),
+        Call.negate(Call.multiply(Constant.of(2n), Constant.of(3n))));
     assert.strictEqual(expr.eval_constants().to_string(), "2");
   });
 
   it('subst + simplify', function() {
     let expr: Expression = Call.add(
         Call.subtract(Variable.of("x"),
-            Call.exponentiate(Variable.of("y"), Constant.of(3))),
+            Call.exponentiate(Variable.of("y"), Constant.of(3n))),
         Call.negate(Call.multiply(Variable.of("z"), Variable.of("y"))));
-    expr = expr.subst(Variable.of("x"), Constant.of(16));
-    expr = expr.subst(Variable.of("y"), Constant.of(2));
-    expr = expr.subst(Variable.of("z"), Constant.of(3));
+    expr = expr.subst(Variable.of("x"), Constant.of(16n));
+    expr = expr.subst(Variable.of("y"), Constant.of(2n));
+    expr = expr.subst(Variable.of("z"), Constant.of(3n));
 
-    assert.ok(expr.simplify().equals(Constant.of(2)));
+    assert.ok(expr.simplify().equals(Constant.of(2n)));
   });
 
   it('associate', function() {
-    let expr: Expression = Constant.of(3);
+    let expr: Expression = Constant.of(3n);
     assert.ok(expr.associate().equals(expr));
 
     expr = Variable.of("x");
@@ -205,25 +205,25 @@ describe('exprs', function() {
 
     expr = Call.add(
         Call.add(Variable.of("x"), Variable.of("y")),
-        Call.add(Constant.of(2), Variable.of("z")));
+        Call.add(Constant.of(2n), Variable.of("z")));
     assert.ok(expr.associate().equals(
         Call.of(exprs.FUNC_ADD,
-            Variable.of("x"), Variable.of("y"), Constant.of(2),
+            Variable.of("x"), Variable.of("y"), Constant.of(2n),
             Variable.of("z"))));
 
     expr = Call.multiply(
         Call.multiply(Variable.of("x"), Variable.of("y")),
-        Call.multiply(Constant.of(2), Variable.of("z")));
+        Call.multiply(Constant.of(2n), Variable.of("z")));
     assert.ok(expr.associate().equals(
         Call.of(exprs.FUNC_MULTIPLY,
-            Variable.of("x"), Variable.of("y"), Constant.of(2),
+            Variable.of("x"), Variable.of("y"), Constant.of(2n),
             Variable.of("z"))));
   });
 
   it('remove negation', function() {
     let expr1: Expression = Call.add(
         Call.subtract(Variable.of("x"),
-            Call.exponentiate(Variable.of("y"), Constant.of(3))),
+            Call.exponentiate(Variable.of("y"), Constant.of(3n))),
         Call.negate(Call.multiply(Variable.of("z"), Variable.of("y"))));
     let expr2 = expr1.remove_negation();
     assert.strictEqual(expr2.to_string(), "x + (-1)*y^3 + (-1)*(z*y)");
@@ -251,10 +251,10 @@ describe('exprs', function() {
   it('combine_factors', function() {
     let args = [
         Variable.of("x"), Variable.of("y"), Variable.of("z"), Variable.of("x"),
-        Call.exponentiate(Variable.of("y"), Constant.of(2))
+        Call.exponentiate(Variable.of("y"), Constant.of(2n))
       ];
     let [newArgs, value] = Call.combine_factors(args);
-    assert.strictEqual(value, 1);
+    assert.strictEqual(value, 1n);
     assert.strictEqual(newArgs.length, 3);
     assert.strictEqual(newArgs[0].to_string(), "x^2");
     assert.strictEqual(newArgs[1].to_string(), "y^3");
@@ -268,7 +268,7 @@ describe('exprs', function() {
         Variable.of("x")
       ];
     [newArgs, value] = Call.combine_factors(args);
-    assert.strictEqual(value, 1);
+    assert.strictEqual(value, 1n);
     assert.strictEqual(newArgs.length, 3);
     assert.strictEqual(newArgs[0].to_string(), "x");
     assert.strictEqual(newArgs[1].to_string(), "(x + y)^2");
@@ -278,7 +278,7 @@ describe('exprs', function() {
   it('combine_terms', function() {
     let args = [
         Variable.of("x"), Variable.of("y"), Variable.of("z"), Variable.of("x"),
-        Call.multiply(Constant.of(2), Variable.of("y"))
+        Call.multiply(Constant.of(2n), Variable.of("y"))
       ];
     let newArgs = Call.combine_terms(args);
     assert.strictEqual(newArgs.length, 3);
@@ -292,7 +292,7 @@ describe('exprs', function() {
         Call.multiply(Variable.of("x"),
             Call.multiply(Variable.of("y"), Variable.of("x"))),
         Call.multiply(Variable.of("y"),
-            Call.exponentiate(Variable.of("x"), Constant.of(2))));
+            Call.exponentiate(Variable.of("x"), Constant.of(2n))));
     expr = expr.associate();
     assert.strictEqual(expr.to_string(), "x*y*x + y*x^2");
 
@@ -309,8 +309,8 @@ describe('exprs', function() {
             Call.multiply(Variable.of("y"), Variable.of("x"))),
         Call.multiply(Variable.of("y"),
             Call.multiply(
-                Call.exponentiate(Variable.of("x"), Constant.of(2)),
-                Constant.of(3))));
+                Call.exponentiate(Variable.of("x"), Constant.of(2n)),
+                Constant.of(3n))));
     assert.strictEqual(expr.to_string(), "x*(y*x) + y*(x^2*3)");
 
     let expr2 = expr.simplify();
@@ -321,9 +321,9 @@ describe('exprs', function() {
     let expr: Expression = Call.add(
         Call.multiply(Variable.of("x"), Call.exponentiate(
             Call.add(Variable.of("y"), Variable.of("z")),
-            Constant.of(3))),
+            Constant.of(3n))),
         Call.multiply(Call.exponentiate(
-            Call.add(Variable.of("x"), Variable.of("y")), Constant.of(2)),
+            Call.add(Variable.of("x"), Variable.of("y")), Constant.of(2n)),
             Variable.of("z")));
     assert.strictEqual(expr.to_string(), "x*(y + z)^3 + (x + y)^2*z");
 
@@ -332,7 +332,7 @@ describe('exprs', function() {
         "x*((y + z)*(y + z)*(y + z)) + (x + y)*(x + y)*z");
 
     let expr3: Expression = Call.exponentiate(
-        Call.exponentiate(Variable.of("x"), Constant.of(2)), Constant.of(3));
+        Call.exponentiate(Variable.of("x"), Constant.of(2n)), Constant.of(3n));
     assert.strictEqual(expr3.to_string(), "(x^2)^3");
 
     let expr4 = expr3.remove_exponents();
@@ -341,14 +341,14 @@ describe('exprs', function() {
 
   it('remove_exponents', function() {
     let expr: Expression = Call.multiply(
-        Call.of("gcd", Variable.of("a"), Constant.of(3)),
+        Call.of("gcd", Variable.of("a"), Constant.of(3n)),
         Call.multiply(
             Call.add(Variable.of("x"), Variable.of("y")),
             Call.multiply(
                 Variable.of("x"),
                 Call.multiply(
                     Call.add(Variable.of("x"), Variable.of("y")),
-                    Constant.of(4)))));
+                    Constant.of(4n)))));
     assert.strictEqual(expr.to_string(), "gcd(a, 3)*((x + y)*(x*((x + y)*4)))");
 
     let expr2 = expr.distribute();
@@ -356,7 +356,7 @@ describe('exprs', function() {
         "gcd(a, 3)*(x*(x*(x*4))) + gcd(a, 3)*(x*(x*(y*4))) + gcd(a, 3)*(y*(x*(x*4))) + gcd(a, 3)*(y*(x*(y*4)))");
 
     let expr3: Expression = Call.exponentiate(
-        Call.add(Variable.of("x"), Variable.of("y")), Constant.of(3));
+        Call.add(Variable.of("x"), Variable.of("y")), Constant.of(3n));
     assert.strictEqual(expr3.to_string(), "(x + y)^3");
 
     let expr4: Expression = expr3.remove_exponents().distribute();
@@ -379,7 +379,7 @@ describe('exprs', function() {
 
   it('normalize', function() {
     let expr: Expression = Call.exponentiate(
-        Call.add(Variable.of("x"), Variable.of("y")), Constant.of(3));
+        Call.add(Variable.of("x"), Variable.of("y")), Constant.of(3n));
     assert.strictEqual(expr.to_string(), "(x + y)^3");
 
     let expr2: Expression = expr.normalize();
@@ -387,7 +387,7 @@ describe('exprs', function() {
         "3*x*y^2 + 3*x^2*y + x^3 + y^3");
 
     let expr3: Expression = Call.exponentiate(
-        Call.add(Variable.of("x"), Variable.of("y")), Constant.of(5));
+        Call.add(Variable.of("x"), Variable.of("y")), Constant.of(5n));
     assert.strictEqual(expr3.to_string(), "(x + y)^5");
 
     let expr4: Expression = expr3.normalize();
@@ -424,7 +424,7 @@ describe('exprs', function() {
     assert.strictEqual(expr10.to_string(), "0");
 
     let expr11: Expression = Call.multiply(
-        Constant.of(2),
+        Constant.of(2n),
         Call.subtract(
             Call.add(Variable.of("a"), Variable.of("b")),
             Variable.of("y")));

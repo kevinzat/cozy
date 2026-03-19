@@ -8,11 +8,11 @@ describe('unify', function() {
 
   it('props', function() {
     const prop1 = Conjunction.of(
-        Predicate.of("P", Constant.of(0), Constant.of(1)),
+        Predicate.of("P", Constant.of(0n), Constant.of(1n)),
         Predicate.of("Q", Variable.of("x")));
     const prop2 = Conjunction.of(
-        Predicate.of("P", Constant.of(0), Variable.of("v")),
-        Predicate.of("Q", Call.of("bar", Constant.of(2))));
+        Predicate.of("P", Constant.of(0n), Variable.of("v")),
+        Predicate.of("Q", Call.of("bar", Constant.of(2n))));
     const subst = UnifyProps(prop1, prop2);
     assert.ok(subst !== undefined);
     assert.strictEqual(subst!.size, 2);
@@ -24,11 +24,11 @@ describe('unify', function() {
 
   it('props allowed_vars', function() {
     const prop1 = Conjunction.of(
-        Predicate.of("P", Constant.of(0), Constant.of(1)),
+        Predicate.of("P", Constant.of(0n), Constant.of(1n)),
         Predicate.of("Q", Variable.of("x")));
     const prop2 = Conjunction.of(
-        Predicate.of("P", Constant.of(0), Variable.of("v")),
-        Predicate.of("Q", Call.of("bar", Constant.of(2))));
+        Predicate.of("P", Constant.of(0n), Variable.of("v")),
+        Predicate.of("Q", Call.of("bar", Constant.of(2n))));
     const subst = UnifyProps(prop1, prop2, new Set(["v", "x"]));
     assert.ok(subst !== undefined);
     assert.strictEqual(subst!.size, 2);
@@ -46,7 +46,7 @@ describe('unify', function() {
         Exists.of("y",
             Predicate.equal(
                 Variable.of("x"),
-                Call.multiply(Constant.of(2), Variable.of("y")))));
+                Call.multiply(Constant.of(2n), Variable.of("y")))));
     const use = Predicate.of("Even", Variable.of("a"));
     const subst = UnifyProps(def.left, use, new Set(["x"]));
     assert.ok(subst !== undefined);
@@ -59,7 +59,7 @@ describe('unify', function() {
         Exists.of("y",
             Predicate.equal(
                 Variable.of("a"),
-                Call.multiply(Constant.of(2), Variable.of("y"))))));
+                Call.multiply(Constant.of(2n), Variable.of("y"))))));
   });
 
   it('props for def repeated arg', function() {
@@ -68,7 +68,7 @@ describe('unify', function() {
             Variable.of("x"), Variable.of("y"), Variable.of("x")),
         Predicate.of("Bar",
             Call.add(Variable.of("y"),
-                Call.multiply(Constant.of(5), Variable.of("x")))));
+                Call.multiply(Constant.of(5n), Variable.of("x")))));
     const use = Predicate.of("Foo",
         Variable.of("a"), Variable.of("a"), Variable.of("a"));
     const subst = UnifyProps(def.left, use, new Set(["x", "y"]));
@@ -83,14 +83,14 @@ describe('unify', function() {
     assert.ok(result.equals_alpha(
         Predicate.of("Bar",
             Call.add(Variable.of("a"),
-                Call.multiply(Constant.of(5), Variable.of("a"))))));
+                Call.multiply(Constant.of(5n), Variable.of("a"))))));
   });
 
   it('exprs', function() {
     const expr1 = Call.of("f",
-        Constant.of(0), Constant.of(1), Variable.of("x"));
+        Constant.of(0n), Constant.of(1n), Variable.of("x"));
     const expr2 = Call.of("f",
-        Constant.of(0), Variable.of("v"), Call.of("bar", Constant.of(2)));
+        Constant.of(0n), Variable.of("v"), Call.of("bar", Constant.of(2n)));
     const subst = UnifyExprs(expr1, expr2);
     assert.ok(subst !== undefined);
     assert.strictEqual(subst!.size, 2);
@@ -100,15 +100,15 @@ describe('unify', function() {
     assert.strictEqual(subst.get("x")!.to_string(), "bar(2)");
 
     const expr3 = Call.of("f",
-        Constant.of(1), Variable.of("v"), Call.of("bar", Constant.of(2)));
+        Constant.of(1n), Variable.of("v"), Call.of("bar", Constant.of(2n)));
     assert.strictEqual(UnifyExprs(expr1, expr3), undefined);
   });
 
   it('exprs allowed_vars', function() {
     const expr1 = Call.of("f",
-        Constant.of(0), Constant.of(1), Variable.of("x"));
+        Constant.of(0n), Constant.of(1n), Variable.of("x"));
     const expr2 = Call.of("f",
-        Constant.of(0), Variable.of("v"), Call.of("bar", Constant.of(2)));
+        Constant.of(0n), Variable.of("v"), Call.of("bar", Constant.of(2n)));
     const subst = UnifyExprs(expr1, expr2, new Set(["v", "x"]));
     assert.ok(subst !== undefined);
     assert.strictEqual(subst!.size, 2);

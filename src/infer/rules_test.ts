@@ -450,7 +450,7 @@ describe('rules', function() {
     assert.strictEqual(res1.apply().to_string(), "Q");
 
     const assn2 = new Given(ENV, ParseProp("P(1, 2)"));
-    const res2 = new Apply(ENV, "Thm2", assn2, Constant.of(1), Constant.of(2));
+    const res2 = new Apply(ENV, "Thm2", assn2, Constant.of(1n), Constant.of(2n));
     const res3 = new Equivalent(ENV, res2, ParseProp("Q(3)"));
     assert.strictEqual(res3.apply().to_string(), "Q(3)");
   });

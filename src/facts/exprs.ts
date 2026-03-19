@@ -143,24 +143,24 @@ export abstract class Expression {
 
 /** Represents an integer value. */
 export class Constant extends Expression {
-  value: number;
+  value: bigint;
 
-  constructor(value: number) {
+  constructor(value: bigint) {
     super(EXPR_CONSTANT);
-    this.value = Math.round(value);
+    this.value = value;
   }
 
-  static ZERO = Constant.of(0);
-  static ONE = Constant.of(1);
-  static MINUS_ONE = Constant.of(-1);
+  static ZERO = Constant.of(0n);
+  static ONE = Constant.of(1n);
+  static MINUS_ONE = Constant.of(-1n);
 
   /** Returns a variable with the given value. */
-  static of(value: number): Constant {
+  static of(value: bigint): Constant {
     return new Constant(value);
   }
 
   precedence(): number {
-    return this.value < 0 ? 2 : 5;  // treat negatives as negated positives
+    return this.value < 0n ? 2 : 5;  // treat negatives as negated positives
   }
 
   to_string(): string {
@@ -479,7 +479,7 @@ export class Call extends Expression {
       if (numConst === 2 && newArgs.length === 2) {
         const val1 = (newArgs[0] as Constant).value;
         const val2 = (newArgs[1] as Constant).value;
-        return new Constant(Math.pow(val1, val2));
+        return new Constant(val1 ** val2);
       }
     } else if (this.name === FUNC_SUBTRACT) {
       if (numConst === 2 && newArgs.length === 2) {
@@ -494,14 +494,14 @@ export class Call extends Expression {
 
     if (this.name === FUNC_MULTIPLY) {
       if (numConst === newArgs.length) {
-        let val = 1;
+        let val = 1n;
         for (const newArg of newArgs) {
           val *= (newArg as Constant).value;
         }
         return new Constant(val);
       } else if (numConst > 0) {
         const args: Expression[] = [];
-        let val = 1;
+        let val = 1n;
         for (const newArg of newArgs) {
           if (newArg.variety === EXPR_CONSTANT) {
             val *= (newArg as Constant).value;
@@ -514,14 +514,14 @@ export class Call extends Expression {
       }
     } else if (this.name === FUNC_ADD) {
       if (numConst === newArgs.length) {
-        let val = 0;
+        let val = 0n;
         for (const newArg of newArgs) {
           val += (newArg as Constant).value;
         }
         return new Constant(val);
       } else if (numConst > 1) {
         const args: Expression[] = [];
-        let val = 0;
+        let val = 0n;
         for (const newArg of newArgs) {
           if (newArg.variety === EXPR_CONSTANT) {
             val += (newArg as Constant).value;
@@ -588,7 +588,7 @@ export class Call extends Expression {
       const negArgs: Expression[] = [];
       for (let i = 1; i < newArgs.length; i++) {
         if (newArgs[i].variety === EXPR_CONSTANT &&
-            (newArgs[i] as Constant).value < 0) {
+            (newArgs[i] as Constant).value < 0n) {
           negArgs.push(new Constant(-(newArgs[i] as Constant).value));
         } else if (newArgs[i].variety === EXPR_FUNCTION &&
             (newArgs[i] as Call).name === FUNC_NEGATE &&
@@ -625,9 +625,9 @@ export class Call extends Expression {
       }
     } else if (Call.isExponentiation(this)) {
       const val = (this.args[1] as Constant).value;
-      if (val === 0) {
+      if (val === 0n) {
         return Constant.ONE;
-      } else if (val === 1) {
+      } else if (val === 1n) {
         return this.args[0].apply_identities();
       } 
     }
@@ -643,9 +643,9 @@ export class Call extends Expression {
       const [factors, value] =  Call.combine_factors(args);
       if (factors.length === 0) {
         return Constant.of(value);
-      } else if (value === 1 && factors.length === 1) {
+      } else if (value === 1n && factors.length === 1) {
         return factors[0];
-      } else if (value === 1) {
+      } else if (value === 1n) {
         return new Call(FUNC_MULTIPLY, factors);
       } else if (factors.length === 1) {
         return Call.multiply(Constant.of(value), factors[0]);
@@ -662,11 +662,11 @@ export class Call extends Expression {
   static combine_terms(args: Expression[]): Expression[] {
     // Keep track of terms and the sum of their constant factors. The keys are
     // the string representation of the terms, which should be unique.
-    const count = new Map<string, [Expression|null, number]>();
+    const count = new Map<string, [Expression|null, bigint]>();
 
     for (const arg of args) {
       // Turn this argument into a constant factor times the rest.
-      let val: number = 1;
+      let val: bigint = 1n;
       let expr: Expression|null = arg;
       if (arg.variety == EXPR_CONSTANT) {
         val = (arg as Constant).value;
@@ -689,7 +689,7 @@ export class Call extends Expression {
       // Add the constant factor of this term into the sum.
       const key = (expr === null) ? "" : expr.to_string();
       if (!count.has(key))
-        count.set(key, [expr, 0]);
+        count.set(key, [expr, 0n]);
       count.set(key, [expr, val + count.get(key)![1]]);
     }
 
@@ -722,21 +722,21 @@ export class Call extends Expression {
    * Groups common factors by changing their exponents. Constant values are also
    * combined and returned in the second argument.
    */
-  static combine_factors(args: Expression[]): [Expression[], number] {
+  static combine_factors(args: Expression[]): [Expression[], bigint] {
     // Keep track of factors and the sum of their exponents. The keys are the
     // string representation of the factors, which should be unique.
-    const count = new Map<string, [Expression, number]>();
+    const count = new Map<string, [Expression, bigint]>();
 
     // Multiply together all the constants as we go through, removing them from
     // any further processing.
-    let newConst = 1;
+    let newConst = 1n;
 
     for (const arg of args) {
       if (arg.variety === EXPR_CONSTANT) {
         newConst *= (arg as Constant).value
       } else {
         // Turn this argument into a factor and an exponent.
-        let val: number = 1;
+        let val: bigint = 1n;
         let expr: Expression = arg;
         if (Call.isExponentiation(arg)) {
           expr = (arg as Call).args[0];
@@ -746,7 +746,7 @@ export class Call extends Expression {
         // Add the exponent of this factor into the sum.
         const key = expr.to_string();
         if (!count.has(key))
-          count.set(key, [arg, 0]);
+          count.set(key, [arg, 0n]);
         count.set(key, [expr, val + count.get(key)![1]]);
       }
     }
@@ -760,7 +760,7 @@ export class Call extends Expression {
       const [expr, val] = count.get(key)!;
       if (expr.variety === EXPR_CONSTANT) {
         throw Error(`we have uh-oh, over`)
-      } else if (val == 1) {
+      } else if (val == 1n) {
         newArgs.push(expr);
       } else {
         newArgs.push(new Call(FUNC_EXPONENTIATE, [expr, new Constant(val)]));
@@ -784,12 +784,12 @@ export class Call extends Expression {
 
       // If the argument is any other arithmetic operation, replace
       // exponentiation with a repeated product of the base.
-      } else if (2 <= exp && exp <= 10 &&
+      } else if (2n <= exp && exp <= 10n &&
                  (arg.name === FUNC_MULTIPLY || arg.name === FUNC_ADD ||
                   arg.name === FUNC_SUBTRACT || arg.name === FUNC_NEGATE)) {
         const newArgs = [];
         const base = this.args[0].remove_exponents();
-        for (let i = 0; i < exp; i++) {
+        for (let i = 0n; i < exp; i++) {
           newArgs.push(base);
         }
         return new Call(FUNC_MULTIPLY, newArgs);  // exp copies of args[0]

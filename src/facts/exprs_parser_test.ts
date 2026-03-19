@@ -23,10 +23,10 @@ function AssertParseEqual(text: string, exp_expr: Expression): void {
 describe('exprs_parser', function() {
 
   it('parse primaries', function() {
-    AssertParseEqual("0", Constant.of(0));
-    AssertParseEqual("1", Constant.of(1));
-    AssertParseEqual("2", Constant.of(2));
-    AssertParseEqual("-1", Call.negate(Constant.of(1)));
+    AssertParseEqual("0", Constant.of(0n));
+    AssertParseEqual("1", Constant.of(1n));
+    AssertParseEqual("2", Constant.of(2n));
+    AssertParseEqual("-1", Call.negate(Constant.of(1n)));
 
     AssertParseEqual("x", Variable.of("x"));
     AssertParseEqual("x_1", Variable.of("x_1"));
@@ -40,15 +40,15 @@ describe('exprs_parser', function() {
 
   it('parse operators', function() {
     AssertParseEqual("x^10",
-        Call.exponentiate(Variable.of("x"), Constant.of(10)));
+        Call.exponentiate(Variable.of("x"), Constant.of(10n)));
     AssertParseEqual("2*x*y",
         Call.multiply(
-            Call.multiply(Constant.of(2), Variable.of("x")),
+            Call.multiply(Constant.of(2n), Variable.of("x")),
             Variable.of("y")));
     AssertParseEqual("2*x+3*y",
         Call.add(
-            Call.multiply(Constant.of(2), Variable.of("x")),
-            Call.multiply(Constant.of(3), Variable.of("y"))));
+            Call.multiply(Constant.of(2n), Variable.of("x")),
+            Call.multiply(Constant.of(3n), Variable.of("y"))));
     AssertParseEqual("-x+y-x*y",
         Call.subtract(
             Call.add(Call.negate(Variable.of("x")), Variable.of("y")),
@@ -59,7 +59,7 @@ describe('exprs_parser', function() {
     AssertParseEqual("(x+y)^3",
         Call.exponentiate(
             Call.add(Variable.of("x"), Variable.of("y")),
-            Constant.of(3)));
+            Constant.of(3n)));
     AssertParseEqual("(x-y)*z",
         Call.multiply(
             Call.subtract(Variable.of("x"), Variable.of("y")),

@@ -47,11 +47,11 @@ function _AddIndexes(expr: Expression, indexes: Map<string, number>): void {
  */
 function _MakeEquation(
     left: Expression, right: Expression, indexes: Map<string, number>): LinearEquation {
-  
-  let value = 0;
-  let coefs: number[] = [];
+
+  let value = 0n;
+  let coefs: bigint[] = [];
   for (let i = 0; i < indexes.size; i++)
-      coefs.push(0);
+      coefs.push(0n);
 
   // Add the left-hand-side terms on the left and constant terms on the right.
   for (const term of _GetTerms(left)) {
@@ -92,7 +92,7 @@ function _MakeEquation(
  * Returns each term in the given expression, split into a constant factor and
  * the rest of the expression, if any, as a string.
  */
-function _GetTerms(expr: Expression): [number, string|undefined][] {
+function _GetTerms(expr: Expression): [bigint, string|undefined][] {
   // If this is not a sum, then turn it into one to reduce this to one case.
   if (expr.variety !== EXPR_FUNCTION ||
       (expr as Call).name !== FUNC_ADD) {
@@ -100,7 +100,7 @@ function _GetTerms(expr: Expression): [number, string|undefined][] {
   }
 
   const call = expr as Call;
-  const terms: [number, string|undefined][] = [];
+  const terms: [bigint, string|undefined][] = [];
 
   for (const arg of call.args) {
     switch (arg.variety) {
@@ -109,7 +109,7 @@ function _GetTerms(expr: Expression): [number, string|undefined][] {
         break;
 
       case EXPR_VARIABLE:
-        terms.push([1, arg.to_string()]);
+        terms.push([1n, arg.to_string()]);
         break;
 
       case EXPR_FUNCTION:
@@ -117,13 +117,13 @@ function _GetTerms(expr: Expression): [number, string|undefined][] {
         if (innerCall.name !== FUNC_MULTIPLY ||
             innerCall.args.length < 2 ||
             innerCall.args[0].variety !== EXPR_CONSTANT) {
-          terms.push([1, arg.to_string()]);
+          terms.push([1n, arg.to_string()]);
 
         } else {
           const factor = innerCall.args[0] as Constant;
           if (innerCall.args.length === 2) {
             terms.push([factor.value, innerCall.args[1].to_string()]);
-          
+
           } else {  // > 2 arguments
             const rest = new Call(FUNC_MULTIPLY, innerCall.args.slice(1));
             terms.push([factor.value, rest.to_string()]);
@@ -137,4 +137,3 @@ function _GetTerms(expr: Expression): [number, string|undefined][] {
   }
   return terms;
 }
-

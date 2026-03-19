@@ -868,7 +868,7 @@ export class IntroExists extends Tactic {
  */
 export class Induction extends Tactic {
   indHyp: ForAll;
-  baseCase: number;
+  baseCase: bigint;
 
   constructor(env: Environment, goal: Proposition) {
     super(TACTIC_MODUS_PONENS, env, goal);
@@ -900,7 +900,7 @@ export class Induction extends Tactic {
    * @returns claim for for all integers paired with the first integer for
    *    which it actually is known to hold.
    */
-  static parseInductionClaim(goal: Proposition): [ForAll, number] {
+  static parseInductionClaim(goal: Proposition): [ForAll, bigint] {
     if (goal.variety !== props.PROP_FORALL) {
       throw new InvalidTactic(TACTIC_INDUCTION,
           'goal of induction must be a forall');

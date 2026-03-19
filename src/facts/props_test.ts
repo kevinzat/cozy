@@ -676,10 +676,10 @@ describe('props', function() {
   });
 
   it('normalize expressions', function() {
-    const arg1 = exprs.Constant.of(10);
+    const arg1 = exprs.Constant.of(10n);
     const arg2 = exprs.Call.add(
-        exprs.Call.multiply(exprs.Constant.of(2), exprs.Constant.of(3)),
-        exprs.Constant.of(4));
+        exprs.Call.multiply(exprs.Constant.of(2n), exprs.Constant.of(3n)),
+        exprs.Constant.of(4n));
 
     const eq = props.Predicate.equal(arg1, arg2);
     assert.ok(eq.normalize().equals(props.TRUE));

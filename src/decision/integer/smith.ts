@@ -7,8 +7,8 @@ import Tableau from './tableau';
  * + coefs[1] * x1 + ... + coefs[N] * xN = value.
  */
 export interface LinearEquation {
-  coefs: number[];
-  value: number;
+  coefs: bigint[];
+  value: bigint;
 }
 
 
@@ -63,25 +63,25 @@ export function SmithNormalForm(A: Tableau): [number, number[]] {
 
       // Wipe out all entries below A[k,k] in its column.
       for (let i = k+1; i < A.m; i++) {
-        if (A.entries[i][k] === 0)
+        if (A.entries[i][k] === 0n)
           continue;  // already correct
 
         // Calculate the gcd of A[k][k] and A[i][k].
         let [d, s, t] = ext_gcd(A.entries[k][k], A.entries[i][k]);
 
         // Apply row ops to make A[k][k] contain the gcd.
-        if (s === 0) {
+        if (s === 0n) {
           A.rowSwap(i, k);  // A[i][k] is the gcd, so just swap them
         } else {
-          if (s !== 1)
+          if (s !== 1n)
             A.rowScale(k, s);
-          if (t !== 0)
+          if (t !== 0n)
             A.rowAddMultiple(k, i, t);  // gcd = s * A[k][k] + t * A[i][k]
         }
 
         if (A.entries[k][k] !== d)
           throw new Error(`un oh! ${A.entries[k][k]} should be ${d}`);
-        if (A.entries[i][k] % d !== 0)
+        if (A.entries[i][k] % d !== 0n)
           throw new Error(`un oh! ${d} should divide ${A.entries[i][k]}`);
 
         // Eliminate A[i][k] by subtracting a multiple of gcd;
@@ -90,7 +90,7 @@ export function SmithNormalForm(A: Tableau): [number, number[]] {
 
       // Wipe out all entries to the right of A[k,k] in its row.
       for (let j = k+1; j < A.n; j++) {
-        if (A.entries[k][j] === 0)
+        if (A.entries[k][j] === 0n)
           continue;  // already correct
 
         // Calculate the gcd of A[k][k] and A[k][j].
@@ -99,21 +99,21 @@ export function SmithNormalForm(A: Tableau): [number, number[]] {
           throw new Error(`${d} != ${s} * ${A.entries[k][k]} + ${t} * ${A.entries[k][j]}`);
 
         // Apply column ops to make A[k][k] contain the gcd.
-        if (s === 0) {
+        if (s === 0n) {
           A.colSwap(j, k);  // A[k][j] is the gcd, so just swap them
           [indexes[j], indexes[k]] = [indexes[k], indexes[j]];
-          if (t !== 0)
+          if (t !== 0n)
             A.colScale(k, t);
         } else {
-          if (s !== 1)
+          if (s !== 1n)
             A.colScale(k, s);
-          if (t !== 0)
+          if (t !== 0n)
             A.colAddMultiple(k, j, t);  // gcd = s * A[k][k] + t * A[k][j]
         }
 
         if (A.entries[k][k] !== d)
           throw new Error(`un oh! ${A.entries[k][k]} should be ${d}`);
-        if (A.entries[k][j] % d !== 0)
+        if (A.entries[k][j] % d !== 0n)
           throw new Error(`un oh! ${d} should divide ${A.entries[k][j]}`);
 
         // Eliminate A[k][j] by subtracting a multiple of gcd;
@@ -129,18 +129,22 @@ export function SmithNormalForm(A: Tableau): [number, number[]] {
   return [k, indexes];
 }
 
+function abs(a: bigint): bigint {
+  return a < 0n ? -a : a;
+}
+
 // Returns the index of the nonzero entry in the given submatrix with the
 // smallest absolute value (breaking ties toward lower indices, row then col)
 // or [-1, -1] if no nonzero entries are found.
 function _ArgMinAbs(A: Tableau,
     row_start: number, row_end: number,
     col_start: number, col_end: number): [number, number] {
-  let min_abs = 1e100;
+  let min_abs: bigint | undefined = undefined;
   let min_i = -1, min_j = -1;
   for (let i = row_start; i < row_end; i++) {
     for (let j = col_start; j < col_end; j++) {
-      let c = Math.abs(A.entries[i][j]);
-      if (c > 0 && c < min_abs) {
+      let c = abs(A.entries[i][j]);
+      if (c > 0n && (min_abs === undefined || c < min_abs)) {
         min_abs = c;
         min_i = i;
         min_j = j;
@@ -167,15 +171,15 @@ export function IsImplied(
   // If any variables but the ones solved for (0 to rk-1) remain in the new
   // equation, then its value could be true or false depending on their values.
   for (let j = rk; j < A.n; j++) {
-    if (A.row0![j] !== 0)
+    if (A.row0![j] !== 0n)
       return undefined;
   }
 
   // Since the values of the solved-for variables are known, we can now
   // calculate the value of the LHS of the new equation.
-  let val = 0;
+  let val = 0n;
   for (let j = 0; j < rk; j++) {
-    if (A.row0![j] % A.entries[j][j] !== 0)
+    if (A.row0![j] % A.entries[j][j] !== 0n)
       return undefined;  // we only know about xj in these multiples
 
     const t = A.row0![j] / A.entries[j][j];

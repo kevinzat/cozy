@@ -972,7 +972,7 @@ export class Induction extends Rule {
   baseRule: Rule;
   indRule: Rule;
   indHyp: ForAll;
-  baseCase: number;
+  baseCase: bigint;
 
   constructor(env: Environment, baseRule: Rule, indRule: Rule) {
     super(RULE_INDUCTION, env, baseRule, indRule);
