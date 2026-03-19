@@ -134,6 +134,108 @@ export function Pivot(A: Tableau, cols: number[], row: number, col: number): voi
   cols[row] = col;
 }
 
+/**
+ * Solves a linear program using the two-phase simplex method. This handles
+ * the general case where no initial basic feasible solution is known.
+ *
+ * Minimizes c^T x subject to Ax = b with x >= 0, where b is col0 of A.
+ *
+ * Phase I introduces artificial variables and minimizes their sum to find a
+ * basic feasible solution (or determine infeasibility). Phase II then optimizes
+ * the real objective. The tableau A is modified in place.
+ *
+ * @returns status and basis columns if optimal
+ */
+export function TwoPhaseSimplexMethod(A: Tableau, c: bigint[]):
+    { status: 'optimal', cols: number[] } |
+    { status: 'infeasible' } |
+    { status: 'unbounded' } {
+  if (!A.col0) throw new Error('Tableau is missing col0');
+  if (c.length !== A.n) throw new Error(`wrong size for c: ${c.length} vs ${A.n}`);
+
+  const m = A.m;
+  const n = A.n;
+
+  // Make col0 non-negative by negating rows as needed.
+  for (let i = 0; i < m; i++) {
+    if (A.col0[i] < 0n)
+      A.rowScale(i, -1n);
+  }
+
+  // Build augmented tableau: append m artificial columns (identity matrix).
+  const augEntries: bigint[][] = [];
+  for (let i = 0; i < m; i++) {
+    const row: bigint[] = new Array(n + m);
+    for (let j = 0; j < n; j++) row[j] = A.entries[i][j];
+    for (let j = 0; j < m; j++) row[n + j] = (i === j) ? 1n : 0n;
+    augEntries.push(row);
+  }
+  const aug = new Tableau(augEntries, A.col0.slice());
+
+  // Phase I: minimize sum of artificial variables.
+  const phase1Cost: bigint[] = new Array(n + m).fill(0n);
+  for (let j = n; j < n + m; j++) phase1Cost[j] = 1n;
+
+  const cols: number[] = [];
+  for (let i = 0; i < m; i++) cols.push(n + i);
+
+  SimplexMethod(aug, phase1Cost, cols);
+
+  // Check feasibility: all artificial variables must have value zero.
+  for (let i = 0; i < m; i++) {
+    if (cols[i] >= n && aug.col0![i] !== 0n)
+      return { status: 'infeasible' };
+  }
+
+  // Pivot out any degenerate artificial variables still in the basis.
+  for (let i = 0; i < m; i++) {
+    if (cols[i] < n) continue;
+
+    let pivoted = false;
+    for (let j = 0; j < n; j++) {
+      if (!cols.includes(j) && aug.entries[i][j] !== 0n) {
+        Pivot(aug, cols, i, j);
+        pivoted = true;
+        break;
+      }
+    }
+    // If not pivoted, the row is redundant (all real coefficients are zero).
+  }
+
+  // Build Phase II tableau: keep only non-redundant rows and real columns.
+  const activeRows: number[] = [];
+  const activeCols: number[] = [];
+  for (let i = 0; i < m; i++) {
+    if (cols[i] < n) {
+      activeRows.push(i);
+      activeCols.push(cols[i]);
+    }
+  }
+
+  const phase2Entries: bigint[][] = [];
+  const phase2Col0: bigint[] = [];
+  for (const i of activeRows) {
+    const row: bigint[] = new Array(n);
+    for (let j = 0; j < n; j++) row[j] = aug.entries[i][j];
+    phase2Entries.push(row);
+    phase2Col0.push(aug.col0![i]);
+  }
+
+  // Update A in place for Phase II.
+  A.m = activeRows.length;
+  A.entries = phase2Entries;
+  A.col0 = phase2Col0;
+
+  // Phase II: optimize the real objective.
+  const phase2Ok = SimplexMethod(A, c, activeCols);
+
+  if (!phase2Ok)
+    return { status: 'unbounded' };
+
+  return { status: 'optimal', cols: activeCols };
+}
+
+
 // Zero out (row1, col) using multiples of (row2, col).
 function Zero(A: Tableau, row1: number, row2: number, col: number): void {
   // Calculate the gcd of A[row1][col] and A[row2][col].

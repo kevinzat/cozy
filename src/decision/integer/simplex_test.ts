@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import Tableau from './tableau';
-import { FirstProfitable, LimitingRow, Pivot, SimplexMethod } from './simplex';
+import { FirstProfitable, LimitingRow, Pivot, SimplexMethod, TwoPhaseSimplexMethod } from './simplex';
 import Fraction from './fraction';
 
 
@@ -516,6 +516,265 @@ describe('simplex', function() {
     it('throws when cost vector has wrong size', function() {
       let A = new Tableau([[1n, 0n], [0n, 1n]], [1n, 1n]);
       assert.throws(() => SimplexMethod(A, [1n], [0, 1]),
+          /wrong size for c/);
+    });
+  });
+
+  // ---- TwoPhaseSimplexMethod ----
+
+  /** Checks feasibility and returns objective value for a TwoPhaseSimplexMethod result. */
+  function CheckTwoPhaseResult(
+      origEntries: bigint[][], origCol0: bigint[], c: bigint[],
+      result: ReturnType<typeof TwoPhaseSimplexMethod>, A: Tableau): Fraction {
+    assert.strictEqual(result.status, 'optimal');
+    if (result.status !== 'optimal') throw new Error('unreachable');
+    const x = Solution(A, result.cols);
+    CheckFeasible(origEntries, origCol0, x);
+    return ObjectiveValue(c, x);
+  }
+
+  describe('TwoPhaseSimplexMethod', function() {
+
+    it('solves a problem with negative RHS', function() {
+      // x0 + x1 = -3 (i.e., b = -3)  =>  after negation: -x0 - x1 = 3
+      // x0 - x1 = 1
+      // Minimize x0
+      // Solution: x0 = 2 (as fraction via slack), but let's use standard form.
+      // Standard form with slacks isn't right here since equalities.
+      // Let's do: minimize x0 + x1 subject to:
+      //   -x0 + x1 + x2 = -3   (needs Phase I since b < 0)
+      //    x0 + x1 + x3 = 5
+      // Solution: x0=4, x1=0, x2=1, x3=1 gives -4+0+1=-3 and 4+0+1=5. Cost=4.
+      // Or x0=0, x1=0, x2=-3 infeasible since x2<0.
+      // Actually with x0+x1+x2=5 and -x0+x1+x3=-3:
+      // x0=4, x1=0 => x2=1, x3=-3+4=1. Cost=4.
+      // x0=0, x1=5 => x2=0, x3=-3-5=-8 < 0. Not feasible.
+      // x0=3, x1=0 => x2=2, x3=-3+3=0. Cost=3.
+      // x0=5, x1=0 => x2=0, x3=-3+5=2. Cost=5.
+      // Minimum cost = 0 at x0=0, x1=0, x2=5, x3=-3 => infeasible!
+      // So minimum feasible: x3 >= 0 => x0 >= 3. At x0=3: cost=3.
+      const entries = [
+          [-1n, 1n, 1n, 0n],
+          [ 1n, 1n, 0n, 1n]];
+      const col0 = [-3n, 5n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 1n, 0n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      const obj = CheckTwoPhaseResult(entries, col0, c, result, A);
+      assert.ok(obj.equals(new Fraction(3n)),
+          `expected cost 3, got ${obj.to_string()}`);
+    });
+
+    it('solves a problem where all RHS are positive (no Phase I needed)', function() {
+      // Same as a standard simplex problem
+      // Minimize x0 + x1 subject to:
+      //   x0 + x1 + x2 = 4
+      //   2*x0 + x1 + x3 = 6
+      const entries = [
+          [1n, 1n, 1n, 0n],
+          [2n, 1n, 0n, 1n]];
+      const col0 = [4n, 6n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 1n, 0n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      CheckTwoPhaseResult(entries, col0, c, result, A);
+    });
+
+    it('detects infeasible system', function() {
+      // x0 = 3 and x0 = 5 — contradictory (same variable, different values)
+      const entries = [
+          [1n, 0n],
+          [1n, 0n]];
+      const col0 = [3n, 5n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      assert.strictEqual(result.status, 'infeasible');
+    });
+
+    it('detects infeasible system with negative RHS', function() {
+      // x0 = -1 with x0 >= 0 is infeasible
+      const entries = [[1n, 1n]];
+      const col0 = [-1n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      assert.strictEqual(result.status, 'infeasible');
+    });
+
+    it('detects unbounded problem', function() {
+      // Minimize -x0 subject to: -x0 + x1 = 1 (x0 can grow without bound)
+      const entries = [[-1n, 1n]];
+      const col0 = [1n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [-1n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      assert.strictEqual(result.status, 'unbounded');
+    });
+
+    it('solves with mixed positive and negative RHS', function() {
+      // Minimize x0 + x1 + x2 + x3 subject to:
+      //   x0 - x1 + x2      = 2
+      //  -x0 + x1      + x3 = -1   (needs row negation)
+      // After negation of row 2: x0 - x1 - x3 = 1
+      // So: x0-x1+x2=2 and x0-x1-x3=1 => x2-x3=1 => x2=1+x3.
+      // x0-x1=1+x3, so x0=1+x1+x3. Cost = x0+x1+x2+x3 = 1+x1+x3+x1+1+x3+x3 = 2+2x1+3x3.
+      // Minimum at x1=0, x3=0: x0=1, x2=1. Cost=2.
+      const entries = [
+          [ 1n, -1n, 1n, 0n],
+          [-1n,  1n, 0n, 1n]];
+      const col0 = [2n, -1n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 1n, 1n, 1n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      const obj = CheckTwoPhaseResult(entries, col0, c, result, A);
+      assert.ok(obj.equals(new Fraction(2n)),
+          `expected cost 2, got ${obj.to_string()}`);
+    });
+
+    it('solves a 3-constraint problem requiring Phase I', function() {
+      // Minimize x0 + x1 + x2 subject to:
+      //   x0 + x1 + x3      = 5
+      //   x1 + x2 + x4      = 4
+      //  -x0      + x2 + x5 = -2  (negative RHS)
+      // Row 3 negated: x0 - x2 - x5 = 2 => x0 = 2 + x2 + x5.
+      const entries = [
+          [1n, 1n, 0n, 1n, 0n, 0n],
+          [0n, 1n, 1n, 0n, 1n, 0n],
+          [-1n, 0n, 1n, 0n, 0n, 1n]];
+      const col0 = [5n, 4n, -2n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 1n, 1n, 0n, 0n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      CheckTwoPhaseResult(entries, col0, c, result, A);
+    });
+
+    it('handles redundant constraints', function() {
+      // x0 + x1 = 3 and 2*x0 + 2*x1 = 6 (same constraint doubled)
+      // Minimize x0
+      const entries = [
+          [1n, 1n],
+          [2n, 2n]];
+      const col0 = [3n, 6n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      assert.strictEqual(result.status, 'optimal');
+      if (result.status === 'optimal') {
+        const x = Solution(A, result.cols);
+        // x0 + x1 = 3, minimize x0 => x0 = 0, x1 = 3
+        assert.ok(ObjectiveValue(c, x).equals(new Fraction(0n)),
+            `expected cost 0, got ${ObjectiveValue(c, x).to_string()}`);
+      }
+    });
+
+    it('solves single constraint with negative RHS', function() {
+      // Minimize x0 subject to: -x0 - x1 = -5 => x0 + x1 = 5
+      const entries = [[-1n, -1n]];
+      const col0 = [-5n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      assert.strictEqual(result.status, 'optimal');
+      if (result.status === 'optimal') {
+        const x = Solution(A, result.cols);
+        // After negation: x0 + x1 = 5, minimize x0 => x0=0, x1=5. Cost=0.
+        CheckFeasible(entries, col0, x);
+        assert.ok(ObjectiveValue(c, x).equals(new Fraction(0n)));
+      }
+    });
+
+    it('solves with large coefficients and negative RHS', function() {
+      // Minimize x0 + x1 subject to:
+      //   1000*x0 + x1 + x2 = 1000000
+      //  -x0 - 1000*x1 + x3 = -1000000
+      const entries = [
+          [1000n, 1n, 1n, 0n],
+          [-1n, -1000n, 0n, 1n]];
+      const col0 = [1000000n, -1000000n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 1n, 0n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      CheckTwoPhaseResult(entries, col0, c, result, A);
+    });
+
+    it('solves problem where Phase I finds degenerate basis', function() {
+      // Minimize -x0 - x1 subject to:
+      //   x0 + x1 + x2 = 0   (b = 0, degenerate)
+      //   x0      + x3 = 1
+      // At x0=0,x1=0: x2=0,x3=1. All >= 0. Cost = 0.
+      // At x0=1,x1=0: x2=-1 < 0. Not feasible.
+      // The only feasible point improving cost needs x0+x1<=0 but x0,x1>=0 so x0=x1=0.
+      // Actually wait: x0+x1+x2=0 with x0,x1,x2>=0 means x0=x1=x2=0. Then x3=1. Cost=0.
+      const entries = [
+          [1n, 1n, 1n, 0n],
+          [1n, 0n, 0n, 1n]];
+      const col0 = [0n, 1n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [-1n, -1n, 0n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      const obj = CheckTwoPhaseResult(entries, col0, c, result, A);
+      assert.ok(obj.equals(new Fraction(0n)),
+          `expected cost 0, got ${obj.to_string()}`);
+    });
+
+    it('solves a fully determined system', function() {
+      // x0 = 3, x1 = 7 (unique solution)
+      // Minimize x0 + x1
+      const entries = [
+          [1n, 0n],
+          [0n, 1n]];
+      const col0 = [3n, 7n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 1n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      const obj = CheckTwoPhaseResult(entries, col0, c, result, A);
+      assert.ok(obj.equals(new Fraction(10n)),
+          `expected cost 10, got ${obj.to_string()}`);
+    });
+
+    it('solves a problem with all-negative RHS', function() {
+      // -x0 - x1 - x2     = -6  => x0 + x1 + x2 = 6
+      // -x0       - x3     = -2  => x0 + x3 = 2
+      //      -x1  - x4     = -3  => x1 + x4 = 3
+      // Minimize x0 + x1 + x2
+      // x0+x3=2 => x0<=2. x1+x4=3 => x1<=3. x2=6-x0-x1.
+      // Cost = x0+x1+x2 = 6. Always 6! So any feasible point is optimal.
+      const entries = [
+          [-1n, -1n, -1n, 0n, 0n],
+          [-1n,  0n,  0n, -1n, 0n],
+          [ 0n, -1n,  0n, 0n, -1n]];
+      const col0 = [-6n, -2n, -3n];
+      let A = new Tableau(entries.map(r => r.slice()), col0.slice());
+      const c = [1n, 1n, 1n, 0n, 0n];
+
+      const result = TwoPhaseSimplexMethod(A, c);
+      const obj = CheckTwoPhaseResult(entries, col0, c, result, A);
+      assert.ok(obj.equals(new Fraction(6n)),
+          `expected cost 6, got ${obj.to_string()}`);
+    });
+
+    it('throws when col0 is missing', function() {
+      let A = new Tableau([[1n, 0n], [0n, 1n]]);
+      assert.throws(() => TwoPhaseSimplexMethod(A, [1n, 1n]),
+          /missing col0/);
+    });
+
+    it('throws when cost vector has wrong size', function() {
+      let A = new Tableau([[1n, 0n], [0n, 1n]], [1n, 1n]);
+      assert.throws(() => TwoPhaseSimplexMethod(A, [1n]),
           /wrong size for c/);
     });
   });
