@@ -22,16 +22,19 @@ interface ProblemDefn {
 function App() {
   const [defn, setDefn] = useState<ProblemDefn | undefined>(undefined);
   const [proving, setProving] = useState(false);
+  const [unknownVars, setUnknownVars] = useState<string[]>([]);
 
   const onValid = useCallback((
       givens: string[], conclusion: string, rules: string | undefined,
       variables: string | undefined, definitions: string | undefined,
       theorems: string | undefined) => {
     setDefn({ givens, conclusion, rules, variables, definitions, theorems });
+    setUnknownVars([]);
   }, []);
 
-  const onInvalid = useCallback(() => {
+  const onInvalid = useCallback((unknowns: string[]) => {
     setDefn(undefined);
+    setUnknownVars(unknowns);
   }, []);
 
   if (!proving || !defn) {
@@ -41,10 +44,19 @@ function App() {
           rules={defn?.rules} variables={defn?.variables}
           definitions={defn?.definitions} theorems={defn?.theorems}
           onValid={onValid} onInvalid={onInvalid} />
-        <button className="btn btn-primary" disabled={!defn}
-            onClick={() => setProving(true)}>
-          Try It
-        </button>
+        <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+          <button className="btn btn-primary" disabled={!defn}
+              onClick={() => setProving(true)}>
+            Try It
+          </button>
+          {unknownVars.length > 0 &&
+            <span style={{color: '#cc0000', fontSize: '10pt'}}>
+              Unknown variable{unknownVars.length > 1 ? 's' : ''}:{' '}
+              <b>{unknownVars.join(', ')}</b>
+              {' '}&mdash; add {unknownVars.length > 1 ? 'them' : 'it'} to
+              the Variables field or bind with a quantifier.
+            </span>}
+        </div>
       </main>
     );
   }

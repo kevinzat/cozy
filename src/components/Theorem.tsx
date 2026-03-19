@@ -27,7 +27,7 @@ interface TheoremProps {
     onValid: (givens: string[], conclusion: string, rules: string|undefined,
               variables: string|undefined, definitions: string|undefined, 
               theorems: string|undefined) => void,
-    onInvalid: () => void,
+    onInvalid: (unknownVars: string[]) => void,
 }
 
 interface TheoremState {
@@ -88,6 +88,16 @@ export default class Theorem
       };
   }
 
+  componentDidMount() {
+    this.sendUpdate(
+        this.state.givenText, this.state.givenProp,
+        this.state.proveText, this.state.proveProp,
+        this.state.rulesText, this.state.rulesList,
+        this.state.varsText, this.state.varsList,
+        this.state.defsText, this.state.defsList,
+        this.state.thmsText, this.state.thmsList);
+  }
+
   render() {
     const rows: any[] = [];
 
@@ -95,7 +105,7 @@ export default class Theorem
       const err = (this.state.givenText[i].length > 0) &&
                   (this.state.givenProp[i] === undefined);
       rows.push(
-        <tr>
+        <tr key={`given-${i}`}>
           <td>{i === 0 ? 'Given' : ''}</td>
           <td style={{backgroundColor: err ? '#FF7373' : 'white'}}>
             <input type="text" style={{padding: '5px', width: '320px'}}
@@ -113,7 +123,7 @@ export default class Theorem
     }
 
     rows.push(
-      <tr>
+      <tr key="given-add">
         <td>{this.state.givenText.length === 0 ? 'Given' : ''}</td>
         <td>
           <button type="button" className="btn btn-link"
@@ -128,7 +138,7 @@ export default class Theorem
     const err = (this.state.proveText.length > 0) &&
                 (this.state.proveProp === undefined);
     rows.push(
-      <tr>
+      <tr key="prove">
         <td>Prove</td>
         <td style={{backgroundColor: err ? '#FF7373' : 'white'}}>
           <input type="text" style={{padding: '5px', width: '320px'}}
@@ -142,7 +152,7 @@ export default class Theorem
     const ruleError = (this.state.rulesText.trim().length > 0) &&
         (this.state.rulesList === undefined);
     rows.push(
-      <tr>
+      <tr key="rules">
         <td>Rules</td>
         <td style={{backgroundColor: ruleError ? '#FF7373' : 'white'}}>
           <input type="text" style={{padding: '5px', width: '640px'}}
@@ -158,7 +168,7 @@ export default class Theorem
     const varsError = (this.state.varsText.trim().length > 0) &&
         (this.state.varsList === undefined);
     rows.push(
-      <tr>
+      <tr key="variables">
         <td>Variables</td>
         <td style={{backgroundColor: varsError ? '#FF7373' : 'white'}}>
           <input type="text" style={{padding: '5px', width: '320px'}}
@@ -174,7 +184,7 @@ export default class Theorem
     const defsError = (this.state.defsText.trim().length > 0) &&
         (this.state.defsList === undefined);
     rows.push(
-      <tr>
+      <tr key="definitions">
         <td>Definitions</td>
         <td style={{backgroundColor: defsError ? '#FF7373' : 'white'}}>
           <textarea rows={5} style={{padding: '5px', width: '640px'}}
@@ -191,7 +201,7 @@ export default class Theorem
     const thmsError = (this.state.thmsText.trim().length > 0) &&
         (this.state.thmsList === undefined);
     rows.push(
-      <tr>
+      <tr key="theorems">
         <td>Theorems</td>
         <td style={{backgroundColor: thmsError ? '#FF7373' : 'white'}}>
           <textarea rows={5} style={{padding: '5px', width: '640px'}}
@@ -207,7 +217,7 @@ export default class Theorem
     return (
         <div>
           <table cellPadding={5}>
-            {rows}
+            <tbody>{rows}</tbody>
           </table>
         </div>);
   }
@@ -338,7 +348,9 @@ export default class Theorem
       varsText: string, varsList: string[] | undefined,
       defsText: string, defsList: [string, Proposition][] | undefined,
       thmsText: string, thmsList: [string, Proposition][] | undefined) {
+    const unknownVars = FindUnknownVars(givenProp, proveProp, varsList || []);
     if (this.isComplete(givenProp, proveProp) &&
+        unknownVars.length === 0 &&
         (rulesList !== undefined || rulesText.trim().length === 0) &&
         (varsList !== undefined || varsText.trim().length === 0) &&
         (defsList !== undefined || defsText.trim().length === 0) &&
@@ -349,7 +361,7 @@ export default class Theorem
           defsText.length > 0 ? defsText : undefined,   // whitespace = []
           thmsText.length > 0 ? thmsText : undefined);  // whitespace = []
     } else {
-      this.props.onInvalid();
+      this.props.onInvalid(unknownVars);
     }
   }
 
@@ -410,6 +422,30 @@ export function ParseTheorems(
   }
   return thms;
 }
+
+/**
+ * Finds free variables in the givens and conclusion that are not in the
+ * declared variables list. Returns a sorted, deduplicated array.
+ */
+function FindUnknownVars(
+    givenProp: Array<Proposition | undefined>,
+    proveProp: Proposition | undefined,
+    declaredVars: string[]): string[] {
+  const declared = new Set(declaredVars);
+  const unknown = new Set<string>();
+  for (const prop of givenProp) {
+    if (prop !== undefined) {
+      for (const name of prop.free_vars())
+        if (!declared.has(name)) unknown.add(name);
+    }
+  }
+  if (proveProp !== undefined) {
+    for (const name of proveProp.free_vars())
+      if (!declared.has(name)) unknown.add(name);
+  }
+  return Array.from(unknown).sort();
+}
+
 
 // As above but returns undefined if the text is invalid.
 function ParseTheoremsOrUndefined(
