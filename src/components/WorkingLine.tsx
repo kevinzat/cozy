@@ -79,7 +79,7 @@ export abstract class WorkingLine<Ast, P extends WorkingLineProps>
     }
 
     return <td className="line-rule">
-        <div style={{backgroundColor: err ? '#FF7373' : 'white'}}>
+        <div style={{backgroundColor: err ? '#E8A07C' : 'white'}}>
           <input type="text"
               value={this.state.text} placeholder={this.placeholder}
               autoFocus={this.props.firstWorking}

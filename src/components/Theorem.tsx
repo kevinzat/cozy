@@ -106,16 +106,18 @@ export default class Theorem
                   (this.state.givenProp[i] === undefined);
       rows.push(
         <tr key={`given-${i}`}>
-          <td>{i === 0 ? 'Given' : ''}</td>
-          <td style={{backgroundColor: err ? '#FF7373' : 'white'}}>
-            <input type="text" style={{padding: '5px', width: '320px'}}
+          <td style={{fontFamily: 'Helvetica, sans-serif', fontWeight: 'bold', verticalAlign: 'top', paddingTop: '10px'}}>{i === 0 ? 'Given' : ''}</td>
+          <td>
+            <span style={{padding: '10px 5px', marginLeft: '-5px', backgroundColor: err ? '#E8A07C' : 'transparent'}}>
+            <input type="text" className="setup-input" style={{padding: '5px', width: '320px'}}
                 value={this.state.givenText[i]} placeholder="e.g., (P and Q) -> not S"
                 onChange={this.handleGivenChange.bind(this, i)}>
             </input>
-            <button type="button" className="btn btn-link"
-                style={{padding: '6px', color: 'gray', border: 'none', fontSize: '10pt', marginLeft: '10px'}}
+            </span>
+            <button type="button"
+                style={{border: 'none', background: 'none', cursor: 'pointer', color: '#c0c0c0', fontSize: '16px', marginLeft: '8px'}}
                 onClick={this.handleGivenRemove.bind(this, i)}>
-              <i className="fa fa-remove"></i>
+              &#x2715;
             </button>
           </td>
           <td></td>
@@ -124,12 +126,12 @@ export default class Theorem
 
     rows.push(
       <tr key="given-add">
-        <td>{this.state.givenText.length === 0 ? 'Given' : ''}</td>
+        <td style={{fontFamily: 'Helvetica, sans-serif', fontWeight: 'bold', verticalAlign: 'top', paddingTop: '10px'}}>{this.state.givenText.length === 0 ? 'Given' : ''}</td>
         <td>
-          <button type="button" className="btn btn-link"
-              style={{padding: '6px', color: 'gray', border: 'none', fontSize: '10pt'}}
+          <button type="button"
+              style={{border: '1px solid #c0c0c0', background: '#f0f0f0', cursor: 'pointer', borderRadius: '3px', padding: '2px 10px', color: '#606060', fontSize: '14px'}}
               onClick={this.handleGivenAddNew.bind(this)}>
-            <i className="fa fa-plus"></i>
+            +
           </button>
         </td>
         <td></td>
@@ -139,13 +141,15 @@ export default class Theorem
                 (this.state.proveProp === undefined);
     rows.push(
       <tr key="prove">
-        <td>Prove</td>
-        <td style={{backgroundColor: err ? '#FF7373' : 'white'}}>
+        <td style={{fontFamily: 'Helvetica, sans-serif', fontWeight: 'bold', verticalAlign: 'top', paddingTop: '10px'}}>Prove</td>
+        <td>
+          <span style={{padding: '10px 5px', marginLeft: '-5px', backgroundColor: err ? '#E8A07C' : 'transparent'}}>
           <input type="text" style={{padding: '5px', width: '320px'}}
               value={this.state.proveText} placeholder="e.g., (P or Q) -> not S"
               onChange={this.handleStmtChange.bind(this)}>
           </input>
-        </td> 
+          </span>
+        </td>
         <td></td>
       </tr>);
 
@@ -153,14 +157,16 @@ export default class Theorem
         (this.state.rulesList === undefined);
     rows.push(
       <tr key="rules">
-        <td>Rules</td>
-        <td style={{backgroundColor: ruleError ? '#FF7373' : 'white'}}>
+        <td style={{fontFamily: 'Helvetica, sans-serif', fontWeight: 'bold', verticalAlign: 'top', paddingTop: '10px'}}>Rules</td>
+        <td>
+          <span style={{padding: '10px 5px', marginLeft: '-5px', backgroundColor: ruleError ? '#E8A07C' : 'transparent'}}>
           <input type="text" style={{padding: '5px', width: '640px'}}
               value={this.state.rulesText} placeholder="e.g., modus ponens, intro and, elim or"
               onChange={this.handleRulesChange.bind(this)}>
           </input>
+          </span>
         </td>
-        <td style={{color: 'gray', fontSize: '10pt', marginLeft: '10px'}}>
+        <td style={{color: '#909090', fontSize: '0.9em', fontFamily: 'Helvetica, sans-serif'}}>
           (empty = all known rules)
         </td>
       </tr>);
@@ -169,14 +175,16 @@ export default class Theorem
         (this.state.varsList === undefined);
     rows.push(
       <tr key="variables">
-        <td>Variables</td>
-        <td style={{backgroundColor: varsError ? '#FF7373' : 'white'}}>
+        <td style={{fontFamily: 'Helvetica, sans-serif', fontWeight: 'bold', verticalAlign: 'top', paddingTop: '10px'}}>Variables</td>
+        <td>
+          <span style={{padding: '10px 5px', marginLeft: '-5px', backgroundColor: varsError ? '#E8A07C' : 'transparent'}}>
           <input type="text" style={{padding: '5px', width: '320px'}}
               value={this.state.varsText} placeholder="a, b, c"
               onChange={this.handleVariablesChange.bind(this)}>
           </input>
+          </span>
         </td>
-        <td style={{color: 'gray', fontSize: '10pt', marginLeft: '10px'}}>
+        <td style={{color: '#909090', fontSize: '0.9em', fontFamily: 'Helvetica, sans-serif'}}>
           (empty = none)
         </td>
       </tr>);
@@ -185,15 +193,16 @@ export default class Theorem
         (this.state.defsList === undefined);
     rows.push(
       <tr key="definitions">
-        <td>Definitions</td>
-        <td style={{backgroundColor: defsError ? '#FF7373' : 'white'}}>
-          <textarea rows={5} style={{padding: '5px', width: '640px'}}
+        <td style={{fontFamily: 'Helvetica, sans-serif', fontWeight: 'bold', verticalAlign: 'top', paddingTop: '10px'}}>Definitions</td>
+        <td>
+          <textarea rows={5} style={{padding: '5px', width: '480px', fontFamily: 'monospace', fontSize: '13px',
+              border: defsError ? '2px solid #D4724D' : '1px solid #c0c0c0', resize: 'vertical' as any}}
               value={this.state.defsText}
               placeholder="Even: forall n, Even(n) <-> (exists k, n = 2*k)&#10;Odd: forall n, Odd(n) <-> (exists k, n = 2*k+1)"
               onChange={this.handleDefinitionsChange.bind(this)}>
           </textarea>
         </td>
-        <td style={{color: 'gray', fontSize: '10pt', marginLeft: '10px'}}>
+        <td style={{color: '#909090', fontSize: '0.9em', fontFamily: 'Helvetica, sans-serif'}}>
           (empty = {DEFAULT_DEF_NAMES.join(", ")})
         </td>
       </tr>);
@@ -202,14 +211,15 @@ export default class Theorem
         (this.state.thmsList === undefined);
     rows.push(
       <tr key="theorems">
-        <td>Theorems</td>
-        <td style={{backgroundColor: thmsError ? '#FF7373' : 'white'}}>
-          <textarea rows={5} style={{padding: '5px', width: '640px'}}
+        <td style={{fontFamily: 'Helvetica, sans-serif', fontWeight: 'bold', verticalAlign: 'top', paddingTop: '10px'}}>Theorems</td>
+        <td>
+          <textarea rows={5} style={{padding: '5px', width: '480px', fontFamily: 'monospace', fontSize: '13px',
+              border: thmsError ? '2px solid #D4724D' : '1px solid #c0c0c0', resize: 'vertical' as any}}
               value={this.state.thmsText} placeholder="Thm1: forall x, Prime(x) -> (x = 2) or Odd(x)"
               onChange={this.handleTheoremsChange.bind(this)}>
           </textarea>
         </td>
-        <td style={{color: 'gray', fontSize: '10pt', marginLeft: '10px'}}>
+        <td style={{color: '#909090', fontSize: '0.9em', fontFamily: 'Helvetica, sans-serif'}}>
           (empty = all known integer theorems)
         </td>
       </tr>);

@@ -44,13 +44,16 @@ function App() {
           rules={defn?.rules} variables={defn?.variables}
           definitions={defn?.definitions} theorems={defn?.theorems}
           onValid={onValid} onInvalid={onInvalid} />
-        <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-          <button className="btn btn-primary" disabled={!defn}
+        <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginTop: '10px'}}>
+          <button disabled={!defn}
+              style={{padding: '6px 20px', border: '1px solid #c0c0c0', borderRadius: '15px',
+                background: '#f0f0f0', cursor: defn ? 'pointer' : 'default',
+                fontSize: '14px', color: defn ? 'inherit' : '#c0c0c0'}}
               onClick={() => setProving(true)}>
             Try It
           </button>
           {unknownVars.length > 0 &&
-            <span style={{color: '#cc0000', fontSize: '10pt'}}>
+            <span style={{color: '#C05A30', fontSize: '13px', fontFamily: 'monospace'}}>
               Unknown variable{unknownVars.length > 1 ? 's' : ''}:{' '}
               <b>{unknownVars.join(', ')}</b>
               {' '}&mdash; add {unknownVars.length > 1 ? 'them' : 'it'} to
@@ -79,7 +82,8 @@ function App() {
           allowedRules={allowedRules} progressJson={undefined}
           allowedTheorems={theorems.map(([n, _p]) => n)}
           onChange={() => {}} />
-      <button className="btn btn-secondary" style={{marginTop: '10px'}}
+      <button style={{marginTop: '10px', padding: '6px 20px', border: '1px solid #c0c0c0',
+          borderRadius: '15px', background: '#f0f0f0', cursor: 'pointer', fontSize: '14px'}}
           onClick={() => setProving(false)}>
         Back
       </button>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worked Examples - Cozy</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="icon" href="../img/cozy-logo.png">
+</head>
+<body>
+
+<div class="titlebar">
+  <img src="../img/cozy-logo.png" alt="Cozy" class="logo">
+  <h1><a href="index.html">Cozy</a></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="getting-started.html">Getting Started</a>
+    <a href="language.html">Language</a>
+    <a href="rules.html">Proof Rules</a>
+    <a href="ui-guide.html">UI Guide</a>
+  </nav>
+</div>
+
+<div class="page-wrapper">
+  <nav class="sidebar">
+    <div class="section-title">Examples</div>
+    <ul>
+      <li><a href="#example1">Commutativity of And</a></li>
+      <li><a href="#example2">Modus Tollens</a></li>
+      <li><a href="#example3">Direct Proof with Subproof</a></li>
+      <li><a href="#example4">Even + Even = Even</a></li>
+      <li><a href="#example5">Existential Witness</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <h2>Worked Examples</h2>
+    <p>These examples show complete proofs in Cozy, demonstrating various techniques.</p>
+
+    <!-- ============ EXAMPLE 1 ============ -->
+
+    <h2 id="example1">Example 1: Commutativity of And</h2>
+    <p><strong>Theorem:</strong> Given <code>P and Q</code>, prove <code>Q and P</code>.</p>
+    <p><strong>Rules used:</strong> elim and, intro and</p>
+
+    <pre><code>  1.  P and Q                    given
+  2.  Q                          elim and 1 right
+  3.  P                          elim and 1 left
+  4.  Q and P                    intro and 2 3</code></pre>
+
+    <p><strong>Explanation:</strong> We extract each conjunct from the given (lines 2-3),
+      then reassemble them in the opposite order (line 4).</p>
+
+    <!-- ============ EXAMPLE 2 ============ -->
+
+    <h2 id="example2">Example 2: Modus Tollens</h2>
+    <p><strong>Theorem:</strong> Given <code>P -> Q</code> and <code>not Q</code>,
+      prove <code>not P</code>.</p>
+    <p><strong>Rules used:</strong> absurdum, modus ponens, contradiction</p>
+
+    <pre><code>  1.  P -> Q                     given
+  2.  not Q                      given
+  3.  not P                      absurdum (P)
+    3.1.  P                        assumption
+    3.2.  Q                        modus ponens 1 3.1
+    3.3.  false                    contradiction 3.2 2</code></pre>
+
+    <p><strong>Explanation:</strong> We use <code>absurdum</code> to prove <code>not P</code>
+      by assuming <code>P</code> and deriving a contradiction. Inside the subproof (lines 3.1-3.3),
+      we apply modus ponens to get <code>Q</code>, then contradict it with <code>not Q</code>.</p>
+
+    <!-- ============ EXAMPLE 3 ============ -->
+
+    <h2 id="example3">Example 3: Direct Proof with Subproof</h2>
+    <p><strong>Theorem:</strong> Prove <code>(P and Q) -> (Q and P)</code> (no givens).</p>
+    <p><strong>Rules used:</strong> direct proof, elim and, intro and</p>
+
+    <pre><code>  1.  (P and Q) -> (Q and P)     direct proof (P and Q)
+    1.1.  P and Q                  assumption
+    1.2.  Q                        elim and 1.1 right
+    1.3.  P                        elim and 1.1 left
+    1.4.  Q and P                  intro and 1.2 1.3</code></pre>
+
+    <p><strong>Explanation:</strong> Since we have no givens and want to prove an implication,
+      we use <code>direct proof</code> which creates a subproof assuming the antecedent.
+      The subproof goal is the consequent.</p>
+
+    <img src="img/screenshot-subproof.png" alt="Direct proof example showing the indented subproof at lines 1.1-1.4" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <!-- ============ EXAMPLE 4 ============ -->
+
+    <h2 id="example4">Example 4: Even + Even = Even</h2>
+    <p><strong>Theorem:</strong> Given <code>Even(a)</code> and <code>Even(b)</code>,
+      prove <code>Even(a + b)</code>.</p>
+    <p><strong>Variables:</strong> <code>a, b</code></p>
+    <p><strong>Rules used:</strong> defof, elim exists, algebra, intro exists, undef</p>
+
+    <pre><code>  1.  Even(a)                    given
+  2.  Even(b)                    given
+  3.  exists y, a = 2*y          defof Even 1
+  4.  exists y, b = 2*y          defof Even 2
+  5.  [elim exists 3 j]
+    5.1.  a = 2*j                  assumption
+    5.2.  [elim exists 4 k]
+      5.2.1.  b = 2*k                assumption
+      5.2.2.  a + b = 2*(j + k)     algebra (a + b = 2*(j + k)) 5.1 5.2.1
+      5.2.3.  exists y, a + b = 2*y intro exists 5.2.2 {j + k} y
+  6.  exists y, a + b = 2*y      [from subproof]
+  7.  Even(a + b)                undef Even 6</code></pre>
+
+    <p><strong>Explanation:</strong> We expand the definitions of Even for both givens, extract
+      witnesses <code>j</code> and <code>k</code> using elim exists, use algebra to show the
+      sum equals <code>2*(j+k)</code>, then package the witness back up with intro exists and
+      collapse the definition.</p>
+
+    <!-- ============ EXAMPLE 5 ============ -->
+
+    <h2 id="example5">Example 5: Existential Witness</h2>
+    <p><strong>Theorem:</strong> Given <code>P(5)</code>, prove <code>exists x, P(x)</code>.</p>
+    <p><strong>Rules used:</strong> intro exists</p>
+
+    <pre><code>  1.  P(5)                       given
+  2.  exists x, P(x)            intro exists 1 {5} x</code></pre>
+
+    <p><strong>Explanation:</strong> We provide the witness <code>5</code> in curly braces.
+      Since line 1 already proves <code>P(5)</code>, the existential is immediate.</p>
+
+    <div class="info-box tip">
+      <strong>Tip</strong>
+      When using <code>intro exists</code>, the witness expression goes in curly braces
+      <code>{...}</code> and the variable name follows. The line you reference must already
+      prove the body with the witness substituted in.
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proof Rules Reference - Cozy</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="icon" href="../img/cozy-logo.png">
+</head>
+<body>
+
+<div class="titlebar">
+  <img src="../img/cozy-logo.png" alt="Cozy" class="logo">
+  <h1><a href="index.html">Cozy</a></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="getting-started.html">Getting Started</a>
+    <a href="language.html">Language</a>
+    <a href="rules.html">Proof Rules</a>
+    <a href="ui-guide.html">UI Guide</a>
+  </nav>
+</div>
+
+<div class="page-wrapper">
+  <nav class="sidebar">
+    <div class="section-title">Rules</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#fwd-vs-bwd">Forward vs Backward</a></li>
+    </ul>
+    <div class="section-title">Basic Rules</div>
+    <ul>
+      <li><a href="#given">given</a></li>
+      <li><a href="#cite">cite</a></li>
+      <li><a href="#repeat">repeat</a></li>
+    </ul>
+    <div class="section-title">Propositional</div>
+    <ul>
+      <li><a href="#modus-ponens">modus ponens</a></li>
+      <li><a href="#direct-proof">direct proof</a></li>
+      <li><a href="#intro-and">intro and</a></li>
+      <li><a href="#elim-and">elim and</a></li>
+      <li><a href="#intro-or">intro or</a></li>
+      <li><a href="#elim-or">elim or</a></li>
+      <li><a href="#cases">cases / simple cases</a></li>
+      <li><a href="#contradiction">contradiction</a></li>
+      <li><a href="#absurdum">absurdum</a></li>
+      <li><a href="#exfalso">exfalso</a></li>
+      <li><a href="#verum">verum</a></li>
+    </ul>
+    <div class="section-title">Equivalence</div>
+    <ul>
+      <li><a href="#tautology">tautology</a></li>
+      <li><a href="#equivalent">equivalent</a></li>
+    </ul>
+    <div class="section-title">Predicate</div>
+    <ul>
+      <li><a href="#elim-forall">elim forall</a></li>
+      <li><a href="#intro-forall">intro forall</a></li>
+      <li><a href="#elim-exists">elim exists</a></li>
+      <li><a href="#intro-exists">intro exists</a></li>
+    </ul>
+    <div class="section-title">Advanced</div>
+    <ul>
+      <li><a href="#induction">induction</a></li>
+      <li><a href="#substitute">substitute</a></li>
+      <li><a href="#defof-undef">defof / undef</a></li>
+      <li><a href="#apply">apply</a></li>
+      <li><a href="#algebra">algebra</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <h2 id="overview">Proof Rules Overview</h2>
+    <p>Cozy supports a comprehensive set of inference rules for constructing proofs.
+      Each rule can be used in <strong>forward</strong> mode (deriving new facts from
+      known ones) or <strong>backward</strong> mode (breaking a goal into subgoals).</p>
+
+    <h3 id="fwd-vs-bwd">Forward vs Backward Syntax</h3>
+    <p>In <strong>forward mode</strong>, you specify the rule name and reference the line
+      numbers of its premises. In <strong>backward mode</strong>, the goal proposition is
+      already known, so you provide less information (often just the rule name).</p>
+
+    <div class="info-box">
+      <strong>Reading the Tables Below</strong>
+      Each rule shows its forward syntax, backward syntax, what it does, and an example.
+      In forward syntax, <code>L</code> stands for a line reference; in backward
+      syntax, parenthesized propositions are arguments you supply.
+    </div>
+
+    <!-- ============ BASIC RULES ============ -->
+
+    <h2 id="given">given</h2>
+    <p>Introduces a hypothesis. Given lines appear automatically at the top of the proof
+      from the theorem's hypotheses.</p>
+    <table>
+      <tr><th>Forward</th><td><code>given (P and Q)</code></td></tr>
+      <tr><th>Backward</th><td><code>given</code></td></tr>
+      <tr><th>Produces</th><td>The given proposition</td></tr>
+    </table>
+
+    <h2 id="cite">cite</h2>
+    <p>Cites a known theorem by name. The theorem must be in the allowed theorems list.</p>
+    <table>
+      <tr><th>Forward</th><td><code>cite MultEqns</code></td></tr>
+      <tr><th>Backward</th><td><code>cite MultEqns</code></td></tr>
+      <tr><th>Produces</th><td>The full statement of the cited theorem</td></tr>
+    </table>
+
+    <h2 id="repeat">repeat</h2>
+    <p>Repeats a previously proven fact by referencing its line number. Useful for
+      bringing a fact from an outer proof into the current context.</p>
+    <table>
+      <tr><th>Forward</th><td><code>repeat 3</code> or <code>repeat ^1</code></td></tr>
+      <tr><th>Produces</th><td>The same proposition as the referenced line</td></tr>
+    </table>
+
+    <!-- ============ PROPOSITIONAL RULES ============ -->
+
+    <h2 id="modus-ponens">modus ponens</h2>
+    <p>From <code>A -> B</code> and <code>A</code>, conclude <code>B</code>. Also known as
+      implication elimination.</p>
+    <table>
+      <tr><th>Forward</th><td><code>modus ponens L1 L2</code></td></tr>
+      <tr><th>Backward</th><td><code>modus ponens (A)</code></td></tr>
+      <tr><th>Premises</th><td>L1 = <code>A -> B</code>, L2 = <code>A</code> (or vice versa)</td></tr>
+      <tr><th>Produces</th><td><code>B</code></td></tr>
+    </table>
+    <p>Example: If line 1 is <code>P -> Q</code> and line 2 is <code>P</code>, then
+      <code>modus ponens 1 2</code> produces <code>Q</code>.</p>
+
+    <h2 id="direct-proof">direct proof</h2>
+    <p>To prove <code>A -> B</code>, assume <code>A</code> and prove <code>B</code> in a
+      subproof. Also known as implication introduction.</p>
+    <table>
+      <tr><th>Forward</th><td><code>direct proof (A)</code></td></tr>
+      <tr><th>Backward</th><td><code>direct proof</code></td></tr>
+      <tr><th>Creates</th><td>A subproof assuming <code>A</code> with goal <code>B</code></td></tr>
+      <tr><th>Produces</th><td><code>A -> B</code></td></tr>
+    </table>
+
+    <h2 id="intro-and">intro and</h2>
+    <p>From <code>A</code> and <code>B</code>, conclude <code>A and B</code>.</p>
+    <table>
+      <tr><th>Forward</th><td><code>intro and L1 L2</code></td></tr>
+      <tr><th>Backward</th><td><code>intro and</code></td></tr>
+      <tr><th>Premises</th><td>L1 = <code>A</code>, L2 = <code>B</code></td></tr>
+      <tr><th>Produces</th><td><code>A and B</code></td></tr>
+    </table>
+
+    <h2 id="elim-and">elim and</h2>
+    <p>From <code>A and B</code>, extract either <code>A</code> (left) or <code>B</code> (right).</p>
+    <table>
+      <tr><th>Forward</th><td><code>elim and L left</code> or <code>elim and L right</code></td></tr>
+      <tr><th>Backward</th><td><code>elim and (A and B) left</code> or <code>elim and (A and B) right</code></td></tr>
+      <tr><th>Premise</th><td>L = <code>A and B</code></td></tr>
+      <tr><th>Produces</th><td><code>A</code> (left) or <code>B</code> (right)</td></tr>
+    </table>
+
+    <h2 id="intro-or">intro or</h2>
+    <p>From <code>A</code>, conclude <code>A or B</code> (left) or <code>B or A</code> (right).
+      You must supply the "other" disjunct.</p>
+    <table>
+      <tr><th>Forward</th><td><code>intro or L (B) right</code> &mdash; proves <code>A or B</code> from <code>A</code></td></tr>
+      <tr><th></th><td><code>intro or L (A) left</code> &mdash; proves <code>A or B</code> from <code>B</code></td></tr>
+      <tr><th>Backward</th><td><code>intro or (A)</code> &mdash; to prove a disjunction, supply one disjunct</td></tr>
+    </table>
+    <div class="info-box tip">
+      <strong>Left vs Right</strong>
+      <code>left</code> means the supplied proposition goes on the left of the <code>or</code>;
+      <code>right</code> means it goes on the right. So <code>intro or 3 (Q) right</code>
+      where line 3 is <code>P</code> produces <code>P or Q</code>.
+    </div>
+
+    <h2 id="elim-or">elim or</h2>
+    <p>From <code>A or B</code>, <code>A -> C</code>, and <code>B -> C</code>, conclude <code>C</code>.
+      This is disjunction elimination (proof by cases on an implication).</p>
+    <table>
+      <tr><th>Forward</th><td><code>elim or L1 L2</code></td></tr>
+      <tr><th>Backward</th><td><code>elim or (A or B) left</code> or <code>elim or (A or B) right</code></td></tr>
+      <tr><th>Premises</th><td>L1 = <code>A or B</code>, L2 = <code>A -> C</code> or <code>B -> C</code></td></tr>
+    </table>
+
+    <h2 id="cases">cases / simple cases</h2>
+    <p>Proof by cases. Given <code>A or B</code>, prove the goal assuming <code>A</code> and
+      separately assuming <code>B</code>.</p>
+    <table>
+      <tr><th colspan="2"><strong>simple cases</strong> &mdash; uses two implication subproofs</th></tr>
+      <tr><th>Forward</th><td><code>simple cases L1 L2</code></td></tr>
+      <tr><th>Backward</th><td><code>simple cases (A or B)</code></td></tr>
+      <tr><th>Premises</th><td>L1 = <code>A or B</code>, L2 = <code>A -> C</code> or <code>B -> C</code></td></tr>
+    </table>
+    <table>
+      <tr><th colspan="2"><strong>cases</strong> &mdash; uses three lines: the disjunction and two implications</th></tr>
+      <tr><th>Forward</th><td><code>cases L1 L2 L3</code></td></tr>
+      <tr><th>Backward</th><td><code>cases (A or B)</code></td></tr>
+      <tr><th>Premises</th><td>L1 = <code>A or B</code>, L2 = <code>A -> C</code>, L3 = <code>B -> C</code></td></tr>
+    </table>
+
+    <h2 id="contradiction">contradiction</h2>
+    <p>From <code>A</code> and <code>not A</code>, conclude <code>false</code>. Also known as
+      negation elimination.</p>
+    <table>
+      <tr><th>Forward</th><td><code>contradiction L1 L2</code></td></tr>
+      <tr><th>Backward</th><td><code>contradiction (A)</code></td></tr>
+      <tr><th>Premises</th><td>L1 = <code>A</code>, L2 = <code>not A</code> (or vice versa)</td></tr>
+      <tr><th>Produces</th><td><code>false</code></td></tr>
+    </table>
+
+    <h2 id="absurdum">absurdum</h2>
+    <p>To prove <code>not A</code>, assume <code>A</code> and derive <code>false</code> in a
+      subproof. Also known as negation introduction (reductio ad absurdum).</p>
+    <table>
+      <tr><th>Forward</th><td><code>absurdum (A)</code></td></tr>
+      <tr><th>Backward</th><td><code>absurdum</code></td></tr>
+      <tr><th>Creates</th><td>A subproof assuming <code>A</code> with goal <code>false</code></td></tr>
+      <tr><th>Produces</th><td><code>not A</code></td></tr>
+    </table>
+
+    <h2 id="exfalso">exfalso</h2>
+    <p>From <code>false</code>, conclude anything. Also known as <em>ex falso quodlibet</em>
+      or false elimination.</p>
+    <table>
+      <tr><th>Forward</th><td><code>exfalso L (Q)</code></td></tr>
+      <tr><th>Backward</th><td><code>exfalso</code></td></tr>
+      <tr><th>Premise</th><td>L = <code>false</code></td></tr>
+      <tr><th>Produces</th><td>Any proposition <code>Q</code> you specify</td></tr>
+    </table>
+
+    <h2 id="verum">verum</h2>
+    <p>Conclude <code>true</code> with no premises. Also known as truth introduction.</p>
+    <table>
+      <tr><th>Forward</th><td><code>verum</code></td></tr>
+      <tr><th>Backward</th><td><code>verum</code></td></tr>
+      <tr><th>Produces</th><td><code>true</code></td></tr>
+    </table>
+
+    <!-- ============ EQUIVALENCE RULES ============ -->
+
+    <h2 id="tautology">tautology</h2>
+    <p>Proves any propositional tautology by exhaustive truth-table checking. The proposition
+      must be valid under all possible truth assignments to its propositional variables.</p>
+    <table>
+      <tr><th>Forward</th><td><code>tautology (P or not P)</code></td></tr>
+      <tr><th>Backward</th><td><code>tautology</code></td></tr>
+      <tr><th>Produces</th><td>The tautological proposition</td></tr>
+    </table>
+    <p>Examples of tautologies: <code>P or not P</code>, <code>(P -> Q) -> (not Q -> not P)</code>,
+      <code>(P -> (Q -> R)) -> ((P -> Q) -> (P -> R))</code>.</p>
+
+    <h2 id="equivalent">equivalent</h2>
+    <p>Replace a proposition with an equivalent one. Cozy checks equivalence by truth tables.</p>
+    <table>
+      <tr><th>Forward</th><td><code>equivalent L (Q)</code></td></tr>
+      <tr><th>Backward</th><td><code>equivalent (Q)</code></td></tr>
+      <tr><th>Premise</th><td>L = some proposition <code>P</code></td></tr>
+      <tr><th>Produces</th><td><code>Q</code>, provided <code>P &lt;-> Q</code> is a tautology</td></tr>
+    </table>
+
+    <!-- ============ PREDICATE RULES ============ -->
+
+    <h2 id="elim-forall">elim forall</h2>
+    <p>Instantiate a universally quantified statement with specific expressions.</p>
+    <table>
+      <tr><th>Forward</th><td><code>elim forall L {e1, e2, ...}</code></td></tr>
+      <tr><th>Backward</th><td><code>elim forall {e} x</code></td></tr>
+      <tr><th>Premise</th><td>L = <code>forall x, P(x)</code></td></tr>
+      <tr><th>Produces</th><td><code>P(e1)</code> (with variables substituted by the expressions)</td></tr>
+    </table>
+    <p>Example: If line 1 is <code>forall n, Even(n) -> Odd(n+1)</code>, then
+      <code>elim forall 1 {2*k}</code> produces <code>Even(2*k) -> Odd(2*k+1)</code>.</p>
+
+    <h2 id="intro-forall">intro forall</h2>
+    <p>To prove <code>forall x, P(x)</code>, prove <code>P(x)</code> for an arbitrary fresh
+      variable <code>x</code> in a subproof.</p>
+    <table>
+      <tr><th>Forward</th><td><code>intro forall (forall x, P(x))</code></td></tr>
+      <tr><th>Backward</th><td><code>intro forall</code></td></tr>
+      <tr><th>Creates</th><td>A subproof with a fresh variable and goal <code>P(x)</code></td></tr>
+      <tr><th>Produces</th><td><code>forall x, P(x)</code></td></tr>
+    </table>
+    <p>The subproof begins with "Let <em>x</em> be arbitrary."</p>
+
+    <h2 id="elim-exists">elim exists</h2>
+    <p>Given <code>exists x, P(x)</code>, introduce a new variable <code>c</code> satisfying
+      <code>P(c)</code> and continue the proof in a subproof.</p>
+    <table>
+      <tr><th>Forward</th><td><code>elim exists L c</code></td></tr>
+      <tr><th>Backward</th><td><code>elim exists c x</code></td></tr>
+      <tr><th>Premise</th><td>L = <code>exists x, P(x)</code></td></tr>
+      <tr><th>Creates</th><td>A subproof where <code>c</code> is a fresh variable and <code>P(c)</code> is known</td></tr>
+    </table>
+
+    <h2 id="intro-exists">intro exists</h2>
+    <p>To prove <code>exists x, P(x)</code>, provide a <strong>witness</strong> expression
+      <code>e</code> and prove <code>P(e)</code>.</p>
+    <table>
+      <tr><th>Forward</th><td><code>intro exists L {e} x</code></td></tr>
+      <tr><th>Backward</th><td><code>intro exists {e}</code></td></tr>
+      <tr><th>Premise</th><td>L = <code>P(e)</code> (i.e., the body with the witness substituted)</td></tr>
+      <tr><th>Produces</th><td><code>exists x, P(x)</code></td></tr>
+    </table>
+    <p>Example: To prove <code>exists k, n = 2*k</code> given that <code>n = 2*3</code>,
+      use witness <code>3</code>: <code>intro exists L {3} k</code>.</p>
+
+    <!-- ============ ADVANCED RULES ============ -->
+
+    <h2 id="induction">induction</h2>
+    <p>Mathematical induction. To prove <code>forall n, P(n)</code>, prove the base case
+      <code>P(0)</code> and the inductive step <code>forall n, P(n) -> P(n+1)</code>.</p>
+    <table>
+      <tr><th>Forward</th><td><code>induction L1 L2</code></td></tr>
+      <tr><th>Backward</th><td><code>induction</code></td></tr>
+      <tr><th>Premises</th><td>L1 = <code>P(0)</code>, L2 = <code>forall n, P(n) -> P(n+1)</code></td></tr>
+      <tr><th>Produces</th><td><code>forall n, P(n)</code></td></tr>
+    </table>
+
+    <h2 id="substitute">substitute</h2>
+    <p>Given an equation <code>a = b</code> and a fact containing <code>a</code> (or <code>b</code>),
+      substitute to get the fact with <code>b</code> (or <code>a</code>) instead.</p>
+    <table>
+      <tr><th>Forward</th><td><code>substitute L1 right L2</code> or <code>substitute L1 left L2</code></td></tr>
+      <tr><th>Backward</th><td><code>substitute (a = b) right</code> or <code>substitute (a = b) left</code></td></tr>
+      <tr><th>Premises</th><td>L1 = equation, L2 = fact to rewrite</td></tr>
+    </table>
+    <p><code>right</code> replaces left-hand side with right-hand side; <code>left</code> does
+      the reverse.</p>
+
+    <h2 id="defof-undef">defof / undef</h2>
+    <p>Expand or collapse a definition.</p>
+    <table>
+      <tr><th>Forward</th><td><code>defof Even L</code> &mdash; expand the definition of Even in line L</td></tr>
+      <tr><th></th><td><code>undef Even L</code> &mdash; collapse back into the predicate form</td></tr>
+      <tr><th>Backward</th><td><code>defof Even</code> / <code>undef Even</code></td></tr>
+    </table>
+    <p>Example: If line 3 is <code>Even(n)</code> and the definition of Even is
+      <code>forall x, Even(x) &lt;-> (exists y, x = 2*y)</code>, then
+      <code>defof Even 3</code> produces <code>exists y, n = 2*y</code>.</p>
+
+    <h2 id="apply">apply</h2>
+    <p>Apply a theorem by name. This instantiates a universally quantified theorem
+      and applies modus ponens in one step.</p>
+    <table>
+      <tr><th>Forward</th><td><code>apply TheoremName L</code></td></tr>
+      <tr><th>Backward</th><td><code>apply TheoremName</code></td></tr>
+      <tr><th>Premise</th><td>L = an instance of the theorem's hypothesis</td></tr>
+      <tr><th>Produces</th><td>The corresponding conclusion of the theorem</td></tr>
+    </table>
+
+    <h2 id="algebra">algebra</h2>
+    <p>An automated decision procedure for linear integer arithmetic. It can prove
+      equalities, inequalities, and simple arithmetic facts using a combination of
+      Gaussian elimination, the Simplex method, and Gomory cuts.</p>
+    <table>
+      <tr><th>Forward</th><td><code>algebra (n + 1 = m) L1 L2 ...</code></td></tr>
+      <tr><th>Backward</th><td><code>algebra (premise1) (premise2) ...</code></td></tr>
+      <tr><th>Premises</th><td>Optional line references for facts to use as assumptions</td></tr>
+      <tr><th>Produces</th><td>The stated arithmetic fact, if it follows from the premises</td></tr>
+    </table>
+    <p>In forward mode, you state the conclusion and list any lines whose facts the
+      solver should use. In backward mode, you list additional premise propositions.</p>
+
+    <div class="info-box">
+      <strong>What algebra can solve</strong>
+      The algebra rule handles linear equations and inequalities over integers. It can
+      prove facts like <code>2*k + 1 = 2*(k+1) - 1</code> or that an inequality
+      follows from a set of known inequalities. It cannot handle nonlinear arithmetic
+      (e.g., <code>n^2</code> where <code>n</code> is a variable).
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
