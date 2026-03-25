@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Built-in Definitions &amp; Theorems - Cozy</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="icon" href="../img/cozy-logo.png">
+</head>
+<body>
+
+<div class="titlebar">
+  <img src="../img/cozy-logo.png" alt="Cozy" class="logo">
+  <h1><a href="index.html">Cozy</a></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="getting-started.html">Getting Started</a>
+    <a href="language.html">Language</a>
+    <a href="rules.html">Proof Rules</a>
+    <a href="ui-guide.html">UI Guide</a>
+  </nav>
+</div>
+
+<div class="page-wrapper">
+  <nav class="sidebar">
+    <div class="section-title">Built-ins</div>
+    <ul>
+      <li><a href="#definitions">Definitions</a></li>
+      <li><a href="#def-even">Even</a></li>
+      <li><a href="#def-odd">Odd</a></li>
+      <li><a href="#def-divides">Divides</a></li>
+      <li><a href="#def-congruent">Congruent</a></li>
+      <li><a href="#def-prime">Prime</a></li>
+      <li><a href="#theorems">Theorems</a></li>
+      <li><a href="#thm-arithmetic">Arithmetic</a></li>
+      <li><a href="#thm-division">Division</a></li>
+      <li><a href="#thm-gcd">GCD</a></li>
+      <li><a href="#thm-divisibility">Divisibility</a></li>
+      <li><a href="#set-definitions">Set Definitions</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <h2 id="definitions">Default Definitions</h2>
+    <p>When the Definitions field is left empty, Cozy loads the following integer definitions.
+      These can be used with the <code>defof</code> and <code>undef</code> rules.</p>
+
+    <h3 id="def-even">Even</h3>
+    <pre><code>forall x, Even(x) &lt;-&gt; (exists y, x = 2*y)</code></pre>
+    <p>A number is even if it equals twice some integer.</p>
+
+    <h3 id="def-odd">Odd</h3>
+    <pre><code>forall x, Odd(x) &lt;-&gt; (exists z, x = 2*z + 1)</code></pre>
+    <p>A number is odd if it equals twice some integer plus one.</p>
+
+    <h3 id="def-divides">Divides</h3>
+    <pre><code>forall a, forall b, Divides(a, b) &lt;-&gt; (exists k, b = k*a)</code></pre>
+    <p><code>Divides(a, b)</code> means <code>a</code> divides <code>b</code> (i.e., <code>b</code>
+      is a multiple of <code>a</code>).</p>
+
+    <h3 id="def-congruent">Congruent</h3>
+    <pre><code>forall a, forall b, forall m, Congruent(a, b, m) &lt;-&gt; Divides(m, a - b)</code></pre>
+    <p><code>Congruent(a, b, m)</code> means <code>a</code> is congruent to <code>b</code>
+      modulo <code>m</code>.</p>
+
+    <h3 id="def-prime">Prime</h3>
+    <pre><code>forall p, Prime(p) &lt;-&gt; not (p = 1) and (forall x, Divides(x, p) -&gt; (x = 1) or (x = p))</code></pre>
+    <p>A number is prime if it is not 1 and its only divisors are 1 and itself.</p>
+
+    <h2 id="theorems">Default Theorems</h2>
+    <p>When the Theorems field is left empty, Cozy loads the following theorems.
+      These can be referenced with the <code>cite</code> and <code>apply</code> rules.</p>
+
+    <h3 id="thm-arithmetic">Arithmetic Theorems</h3>
+
+    <table>
+      <tr><th>Name</th><th>Statement</th></tr>
+      <tr>
+        <td><strong>MultEqns</strong></td>
+        <td><code>forall a, forall b, forall c, forall d, (a = b and c = d) -&gt; (a*c = b*d)</code></td>
+      </tr>
+      <tr>
+        <td><strong>DivEquation</strong></td>
+        <td><code>forall a, forall b, forall c, (c*a = c*b and not (c = 0)) -&gt; (a = b)</code></td>
+      </tr>
+    </table>
+    <p><strong>MultEqns</strong> lets you multiply both sides of two equations together.
+      <strong>DivEquation</strong> lets you cancel a nonzero common factor.</p>
+
+    <h3 id="thm-division">Division Algorithm</h3>
+
+    <table>
+      <tr><th>Name</th><th>Statement</th></tr>
+      <tr>
+        <td><strong>Division</strong></td>
+        <td><code>forall a, forall b, (0 &lt; b) -&gt; (a = div(a,b)*b + mod(a,b) and 0 &lt;= mod(a,b) and mod(a,b) &lt; b)</code></td>
+      </tr>
+      <tr>
+        <td><strong>DivisionUnique</strong></td>
+        <td><code>forall a, forall b, forall q, forall r, (a = q*b + r and 0 &lt;= r and r &lt; b) -&gt; (q = div(a,b) and r = mod(a,b))</code></td>
+      </tr>
+    </table>
+    <p>The division algorithm gives quotient <code>div(a,b)</code> and remainder <code>mod(a,b)</code>
+      for any integers with positive divisor. Uniqueness says these are the only quotient and remainder.</p>
+
+    <h3 id="thm-gcd">GCD Theorems</h3>
+
+    <table>
+      <tr><th>Name</th><th>Statement</th></tr>
+      <tr>
+        <td><strong>GCD</strong></td>
+        <td><code>forall a, forall b, (0 &lt; a and 0 &lt;= b) -&gt; (Divides(gcd(a,b),a) and Divides(gcd(a,b),b) and (forall d, Divides(d,a) and Divides(d,b) -&gt; (d &lt;= gcd(a,b))))</code></td>
+      </tr>
+      <tr>
+        <td><strong>GCDUnique</strong></td>
+        <td><code>forall a, forall b, forall x, (Divides(x,a) and Divides(x,b) and (forall d, Divides(d,a) and Divides(d,b) -&gt; (d &lt;= x))) -&gt; x = gcd(a,b)</code></td>
+      </tr>
+    </table>
+    <p>The GCD theorems establish that <code>gcd(a,b)</code> is the greatest common divisor:
+      it divides both <code>a</code> and <code>b</code>, and is the largest such divisor.</p>
+
+    <h3 id="thm-divisibility">Divisibility Theorems</h3>
+
+    <table>
+      <tr><th>Name</th><th>Statement</th></tr>
+      <tr>
+        <td><strong>DividesOne</strong></td>
+        <td><code>forall a, Divides(a, 1) -&gt; a = 1</code></td>
+      </tr>
+    </table>
+
+    <h2 id="set-definitions">Set Definitions</h2>
+    <p>The following set definitions are always available (they cannot be overridden).
+      They are used internally by the set-related rules.</p>
+
+    <table>
+      <tr><th>Operation</th><th>Definition</th></tr>
+      <tr>
+        <td><strong>Complement</strong> (<code>~A</code>)</td>
+        <td><code>forall a, forall x, x in ~a &lt;-&gt; not (x in a)</code></td>
+      </tr>
+      <tr>
+        <td><strong>Union</strong> (<code>A cup B</code>)</td>
+        <td><code>forall a, forall b, forall x, x in (a cup b) &lt;-&gt; (x in a or x in b)</code></td>
+      </tr>
+      <tr>
+        <td><strong>Intersection</strong> (<code>A cap B</code>)</td>
+        <td><code>forall a, forall b, forall x, x in (a cap b) &lt;-&gt; (x in a and x in b)</code></td>
+      </tr>
+      <tr>
+        <td><strong>Difference</strong> (<code>A \ B</code>)</td>
+        <td><code>forall a, forall b, forall x, x in (a \ b) &lt;-&gt; (x in a and not (x in b))</code></td>
+      </tr>
+      <tr>
+        <td><strong>Subset</strong> (<code>A subset B</code>)</td>
+        <td><code>forall a, forall b, a subset b &lt;-&gt; (forall x, x in a -&gt; x in b)</code></td>
+      </tr>
+      <tr>
+        <td><strong>Set Equality</strong> (<code>A sameset B</code>)</td>
+        <td><code>forall a, forall b, a sameset b &lt;-&gt; (a subset b and b subset a)</code></td>
+      </tr>
+    </table>
+
+    <div class="info-box">
+      <strong>Note</strong>
+      Set definitions are built into Cozy's internals and cannot be parsed from text
+      (because they use higher-order set variables). They are always loaded alongside
+      whatever custom definitions you provide.
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UI Guide - Cozy</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="icon" href="../img/cozy-logo.png">
+</head>
+<body>
+
+<div class="titlebar">
+  <img src="../img/cozy-logo.png" alt="Cozy" class="logo">
+  <h1><a href="index.html">Cozy</a></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="getting-started.html">Getting Started</a>
+    <a href="language.html">Language</a>
+    <a href="rules.html">Proof Rules</a>
+    <a href="ui-guide.html">UI Guide</a>
+  </nav>
+</div>
+
+<div class="page-wrapper">
+  <nav class="sidebar">
+    <div class="section-title">UI Guide</div>
+    <ul>
+      <li><a href="#theorem-panel">Theorem Panel</a></li>
+      <li><a href="#given-fields">Given Fields</a></li>
+      <li><a href="#prove-field">Prove Field</a></li>
+      <li><a href="#rules-field">Rules Field</a></li>
+      <li><a href="#variables-field">Variables Field</a></li>
+      <li><a href="#definitions-field">Definitions Field</a></li>
+      <li><a href="#theorems-field">Theorems Field</a></li>
+      <li><a href="#try-it">Try It Button</a></li>
+      <li><a href="#proof-editor">Proof Editor</a></li>
+      <li><a href="#preamble">Preamble</a></li>
+      <li><a href="#forward-reasoning">Forward Reasoning</a></li>
+      <li><a href="#backward-reasoning">Backward Reasoning</a></li>
+      <li><a href="#auto-suggest">Auto-Suggest</a></li>
+      <li><a href="#removing-steps">Removing Steps</a></li>
+      <li><a href="#subproofs">Subproofs</a></li>
+      <li><a href="#completion">Proof Completion</a></li>
+      <li><a href="#views">View Modes</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <h2 id="theorem-panel">Theorem Definition Panel</h2>
+    <p>The theorem panel is the first screen you see. It contains all the fields needed
+      to define the theorem you want to prove.</p>
+
+    <img src="img/screenshot-theorem-empty.png" alt="Full theorem definition panel with all six fields" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <p>Each field validates your input in real time. Fields with syntax errors turn
+      <span style="color:#FF7373; font-weight: bold;">red</span> to indicate a problem.</p>
+
+    <h3 id="given-fields">Given Fields (Hypotheses)</h3>
+    <p>The "Given" section lets you list the hypotheses of your theorem. These are
+      propositions assumed to be true at the start of your proof.</p>
+    <ul>
+      <li>Click the <strong>+</strong> button to add a new given.</li>
+      <li>Click the <strong>&times;</strong> button next to any given to remove it.</li>
+      <li>Type a proposition using the <a href="language.html">declarations language</a>.</li>
+      <li>Leave this section empty if your theorem has no hypotheses.</li>
+    </ul>
+    <p>Example: <code>(P and Q) -> not S</code></p>
+
+    <h3 id="prove-field">Prove Field (Conclusion)</h3>
+    <p>Enter the proposition you want to prove. This becomes the main goal in the
+      proof editor.</p>
+    <p>Example: <code>(P or Q) -> not S</code></p>
+
+    <h3 id="rules-field">Rules Field</h3>
+    <p>A comma-separated list of which inference rules are allowed in your proof. This
+      lets instructors restrict proofs to specific techniques.</p>
+    <ul>
+      <li>Leave empty to allow <strong>all known rules</strong>.</li>
+      <li>The default set is the rules of intuitionistic propositional logic:
+        <code>modus ponens, direct proof, intro and, elim and, intro or, elim or,
+        cases, simple cases, contradiction, absurdum, exfalso, verum</code>.</li>
+    </ul>
+
+    <div class="info-box tip">
+      <strong>Tip</strong>
+      Restricting rules is useful for homework assignments where students should
+      practice specific techniques. For exploration, leave it empty.
+    </div>
+
+    <h3 id="variables-field">Variables Field</h3>
+    <p>A comma-separated list of free variable names used in the theorem. Variables
+      are lowercase identifiers (e.g., <code>a, b, c</code>).</p>
+    <ul>
+      <li>Leave empty if your theorem has no free variables.</li>
+      <li>Any variable that appears free (not bound by a quantifier) in the givens or
+        conclusion must be declared here, or Cozy will show an error message.</li>
+    </ul>
+
+    <h3 id="definitions-field">Definitions Field</h3>
+    <p>Custom definitions to use in the proof. Each definition goes on its own line
+      in the format <code>Name: proposition</code>.</p>
+    <p>A definition must be a universally quantified biconditional (using <code>&lt;-&gt;</code>).
+      Example:</p>
+    <pre><code>Even: forall n, Even(n) &lt;-&gt; (exists k, n = 2*k)
+Odd: forall n, Odd(n) &lt;-&gt; (exists k, n = 2*k+1)</code></pre>
+    <p>When left empty, Cozy loads the <a href="builtins.html">default definitions</a>:
+      Even, Odd, Congruent, Divides, and Prime.</p>
+
+    <h3 id="theorems-field">Theorems Field</h3>
+    <p>Custom theorems available to cite during the proof. Same format as definitions:
+      <code>Name: proposition</code>, one per line.</p>
+    <p>A theorem must be a universally quantified implication (using <code>-&gt;</code>).
+      Example:</p>
+    <pre><code>Thm1: forall x, Prime(x) -> (x = 2) or Odd(x)</code></pre>
+    <p>When left empty, Cozy loads the default integer theorems (see
+      <a href="builtins.html">Built-in Definitions &amp; Theorems</a>).</p>
+
+    <h3 id="try-it">Try It / Back Buttons</h3>
+    <p>The <strong>Try It</strong> button is enabled only when all fields are valid and the
+      Prove field is non-empty. Clicking it enters the proof editor.</p>
+    <p>The <strong>Back</strong> button in the proof editor returns to the theorem panel.
+      Note that your proof progress is not saved when going back.</p>
+
+    <div class="info-box warning">
+      <strong>Warning</strong>
+      Clicking "Back" discards your current proof. Make sure to export your proof
+      (via Show LaTeX) before going back if you want to keep it.
+    </div>
+
+    <h2 id="proof-editor">Proof Editor</h2>
+    <p>The proof editor is where you construct your proof. It displays a table of
+      proof lines, each with a line number, proposition, and the rule that justified it.</p>
+
+    <img src="img/screenshot-proof-midproof.png" alt="Proof editor mid-proof showing numbered lines with propositions and rule justifications" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <h3 id="preamble">Preamble</h3>
+    <p>Above the proof lines, the preamble shows:</p>
+    <ul>
+      <li><strong>Allowed Rules</strong> &mdash; the inference rules you can use.</li>
+      <li><strong>Known Variables</strong> &mdash; any declared free variables (shown only
+        if non-empty).</li>
+      <li><strong>Known Theorems</strong> &mdash; theorems available for citing (shown only
+        if non-empty).</li>
+    </ul>
+
+    <h3 id="forward-reasoning">Forward Reasoning</h3>
+    <p>Forward reasoning works <strong>top-down</strong>: you start from known facts
+      (givens and previously proven lines) and derive new facts.</p>
+    <ul>
+      <li>Given lines appear at the top, labeled with the <code>given</code> rule.</li>
+      <li>Below the given lines is a <strong>forward working line</strong> &mdash; a text
+        input where you type your next rule.</li>
+      <li>Rules reference earlier lines by their <strong>line numbers</strong>
+        (e.g., <code>modus ponens 1 2</code>).</li>
+      <li>When you type a valid rule and press Enter (or select from the dropdown),
+        the new fact appears as a new line and a fresh working line opens below it.</li>
+    </ul>
+
+    <h3 id="backward-reasoning">Backward Reasoning</h3>
+    <p>Backward reasoning works <strong>bottom-up</strong>: you start from the goal and
+      break it into simpler subgoals.</p>
+    <ul>
+      <li>Below the forward working line, you'll see <strong>backward working lines</strong>
+        for each unproven goal.</li>
+      <li>Backward lines are shown in a different style, with the goal proposition displayed
+        and an input field for the tactic.</li>
+      <li>When you apply a backward rule, the goal may split into subgoals, each getting
+        its own backward working line.</li>
+      <li>Once all subgoals of a backward rule are resolved (by forward reasoning reaching
+        them), Cozy automatically <strong>converts backward reasoning into forward lines</strong>.</li>
+    </ul>
+
+    <div class="info-box">
+      <strong>How Forward and Backward Connect</strong>
+      You can use both directions simultaneously. Forward reasoning builds up facts;
+      backward reasoning breaks down goals. When a forward fact matches a backward
+      goal, that branch of the proof closes automatically.
+    </div>
+
+    <h3 id="auto-suggest">Auto-Suggest Dropdown</h3>
+    <p>As you type in a working line, Cozy shows a <strong>dropdown of valid completions</strong>.
+      The suggestions are context-aware &mdash; they only show rules that are allowed and
+      syntactically valid given what you've typed so far.</p>
+
+    <img src="img/screenshot-autosuggest.png" alt="Auto-suggest dropdown showing available rule completions" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <ul>
+      <li>Use the <strong>arrow keys</strong> to navigate suggestions.</li>
+      <li>Press <strong>Enter</strong> or <strong>Tab</strong> to accept a suggestion.</li>
+      <li>Continue typing to narrow down the suggestions.</li>
+    </ul>
+
+    <h3 id="removing-steps">Removing Steps</h3>
+    <p>You can undo your most recent steps:</p>
+    <ul>
+      <li>The last forward line (if it's not a given/assumption) shows an
+        <strong>&times;</strong> button to remove it.</li>
+      <li>Backward rules whose children are all open (unresolved) also show an
+        <strong>&times;</strong> button to undo them.</li>
+    </ul>
+
+    <h3 id="subproofs">Subproofs</h3>
+    <p>Some rules (like <code>direct proof</code>, <code>absurdum</code>, <code>intro forall</code>,
+      and <code>elim exists</code>) create <strong>subproofs</strong> &mdash; nested proof
+      contexts with their own assumptions and goals.</p>
+    <ul>
+      <li>Subproof lines are indented to show nesting.</li>
+      <li>Line numbers use dot notation: line 2 of a subproof at line 3 is <code>3.2</code>.</li>
+      <li>Within a subproof, you can reference lines from outer proofs by their full
+        line numbers.</li>
+      <li>Subproofs for <code>intro forall</code> and <code>elim exists</code> begin with
+        "Let <em>x</em> be arbitrary." to introduce the new variable.</li>
+    </ul>
+
+    <h3 id="completion">Proof Completion</h3>
+    <p>Cozy checks whether the goal has been proven after every step. When the proof
+      is complete:</p>
+    <ul>
+      <li>A green <strong>"Your proof is complete."</strong> banner appears.</li>
+      <li>The forward and backward working lines disappear.</li>
+      <li>A <strong>Show LaTeX</strong> button appears to export a formal LaTeX rendering.</li>
+    </ul>
+
+    <img src="img/screenshot-proof-complete.png" alt="Completed proof with green Your proof is complete banner and Show LaTeX button" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <h3 id="views">View Modes</h3>
+    <p>Below the proof, radio buttons let you switch between two display modes:</p>
+    <ul>
+      <li><strong>HTML</strong> &mdash; Propositions are rendered with styled formatting:
+        serif fonts for logical operators, sans-serif for predicates, etc.</li>
+      <li><strong>Text</strong> &mdash; Propositions are shown as plain monospace text,
+        matching what you type in the input fields.</li>
+    </ul>
+
+    <p>When the proof is complete, clicking <strong>Show LaTeX</strong> displays a
+      formal LaTeX rendering you can copy into a document. Click <strong>Hide LaTeX</strong>
+      to collapse it.</p>
+
+  </div>
+</div>
+
+</body>
+</html>

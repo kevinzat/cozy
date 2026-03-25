@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Declarations Language - Cozy</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="icon" href="../img/cozy-logo.png">
+</head>
+<body>
+
+<div class="titlebar">
+  <img src="../img/cozy-logo.png" alt="Cozy" class="logo">
+  <h1><a href="index.html">Cozy</a></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="getting-started.html">Getting Started</a>
+    <a href="language.html">Language</a>
+    <a href="rules.html">Proof Rules</a>
+    <a href="ui-guide.html">UI Guide</a>
+  </nav>
+</div>
+
+<div class="page-wrapper">
+  <nav class="sidebar">
+    <div class="section-title">Language</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#identifiers">Identifiers</a></li>
+      <li><a href="#propositions">Propositions</a></li>
+      <li><a href="#logical-connectives">Logical Connectives</a></li>
+      <li><a href="#quantifiers">Quantifiers</a></li>
+      <li><a href="#predicates">Predicates</a></li>
+      <li><a href="#expressions">Expressions</a></li>
+      <li><a href="#comparisons">Comparisons</a></li>
+      <li><a href="#set-operations">Set Operations</a></li>
+      <li><a href="#precedence">Operator Precedence</a></li>
+      <li><a href="#definitions-syntax">Writing Definitions</a></li>
+      <li><a href="#theorems-syntax">Writing Theorems</a></li>
+      <li><a href="#line-references">Line References</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <h2 id="overview">Overview</h2>
+    <p>Cozy uses a text-based language for writing propositions, expressions, and proof
+      rules. The language is designed to be readable and close to standard mathematical
+      notation while being easy to type.</p>
+
+    <h2 id="identifiers">Identifiers</h2>
+    <p>There are two kinds of identifiers, distinguished by their first character:</p>
+    <table>
+      <tr><th>Kind</th><th>Starts With</th><th>Examples</th><th>Used For</th></tr>
+      <tr>
+        <td><strong>Variables</strong></td>
+        <td>Lowercase letter</td>
+        <td><code>x</code>, <code>n</code>, <code>my_var</code></td>
+        <td>Expression variables, quantified variables, set variables</td>
+      </tr>
+      <tr>
+        <td><strong>Predicates</strong></td>
+        <td>Uppercase letter</td>
+        <td><code>P</code>, <code>Even</code>, <code>MyPred</code></td>
+        <td>Propositional variables, predicate names</td>
+      </tr>
+    </table>
+    <p>Both can contain letters, digits, and underscores after the first character.</p>
+
+    <h2 id="propositions">Propositions</h2>
+    <p>Propositions are the statements you prove or assume. They are built from
+      constants, predicates, logical connectives, and quantifiers.</p>
+
+    <h3>Constants</h3>
+    <table>
+      <tr><th>Syntax</th><th>Meaning</th></tr>
+      <tr><td><code>true</code></td><td>Always-true proposition</td></tr>
+      <tr><td><code>false</code></td><td>Always-false proposition (contradiction)</td></tr>
+    </table>
+
+    <h3 id="logical-connectives">Logical Connectives</h3>
+    <table>
+      <tr><th>Syntax</th><th>Name</th><th>Example</th></tr>
+      <tr><td><code>not</code></td><td>Negation</td><td><code>not P</code></td></tr>
+      <tr><td><code>and</code></td><td>Conjunction</td><td><code>P and Q</code></td></tr>
+      <tr><td><code>or</code></td><td>Disjunction</td><td><code>P or Q</code></td></tr>
+      <tr><td><code>-></code></td><td>Implication</td><td><code>P -> Q</code></td></tr>
+      <tr><td><code>&lt;-></code></td><td>Biconditional (iff)</td><td><code>P &lt;-> Q</code></td></tr>
+    </table>
+
+    <h3 id="quantifiers">Quantifiers</h3>
+    <table>
+      <tr><th>Syntax</th><th>Name</th><th>Example</th></tr>
+      <tr>
+        <td><code>forall x, ...</code></td>
+        <td>Universal quantifier</td>
+        <td><code>forall x, P(x) -> Q(x)</code></td>
+      </tr>
+      <tr>
+        <td><code>exists x, ...</code></td>
+        <td>Existential quantifier</td>
+        <td><code>exists k, n = 2*k</code></td>
+      </tr>
+    </table>
+    <p>Quantifiers bind as loosely as possible &mdash; <code>forall x, P(x) and Q(x)</code>
+      means <code>forall x, (P(x) and Q(x))</code>.</p>
+
+    <h3 id="predicates">Predicates</h3>
+    <p>A predicate name by itself is a propositional variable:</p>
+    <pre><code>P              -- propositional variable
+Q              -- propositional variable</code></pre>
+    <p>A predicate with arguments is a predicate application:</p>
+    <pre><code>Even(n)        -- predicate applied to expression n
+Divides(a, b)  -- predicate applied to expressions a and b
+GCD(a, b, d)   -- predicate with three arguments</code></pre>
+
+    <h2 id="expressions">Arithmetic Expressions</h2>
+    <p>Expressions represent integer values. They appear inside predicates and comparisons.</p>
+    <table>
+      <tr><th>Syntax</th><th>Operation</th><th>Example</th></tr>
+      <tr><td><code>+</code></td><td>Addition</td><td><code>a + b</code></td></tr>
+      <tr><td><code>-</code></td><td>Subtraction / Negation</td><td><code>a - b</code> or <code>-a</code></td></tr>
+      <tr><td><code>*</code></td><td>Multiplication</td><td><code>2*k</code></td></tr>
+      <tr><td><code>^</code></td><td>Exponentiation</td><td><code>n^2</code></td></tr>
+    </table>
+    <p>Integer constants are non-negative: <code>0</code>, <code>1</code>, <code>42</code>.
+      Use <code>-</code> for negation: <code>-1</code>.</p>
+    <p>Function calls use lowercase names with parentheses:</p>
+    <pre><code>div(a, b)      -- integer division
+mod(a, b)      -- modular remainder
+gcd(a, b)      -- greatest common divisor
+f(x, y, z)     -- custom function</code></pre>
+
+    <h2 id="comparisons">Comparisons</h2>
+    <p>Comparisons between expressions produce propositions:</p>
+    <table>
+      <tr><th>Syntax</th><th>Meaning</th><th>Example</th></tr>
+      <tr><td><code>=</code></td><td>Equality</td><td><code>n = 2*k</code></td></tr>
+      <tr><td><code>&lt;</code></td><td>Less than</td><td><code>0 &lt; n</code></td></tr>
+      <tr><td><code>&lt;=</code></td><td>Less or equal</td><td><code>0 &lt;= mod(a,b)</code></td></tr>
+    </table>
+
+    <h2 id="set-operations">Set Operations</h2>
+    <p>Cozy supports set-theoretic expressions and relations. Set variables use the same
+      identifier rules as other variables (lowercase or uppercase).</p>
+
+    <h3>Set Expressions</h3>
+    <table>
+      <tr><th>Syntax</th><th>Operation</th><th>Example</th></tr>
+      <tr><td><code>A cup B</code></td><td>Union</td><td><code>S cup T</code></td></tr>
+      <tr><td><code>A cap B</code></td><td>Intersection</td><td><code>S cap T</code></td></tr>
+      <tr><td><code>A \ B</code></td><td>Difference</td><td><code>S \ T</code></td></tr>
+      <tr><td><code>~A</code></td><td>Complement</td><td><code>~S</code></td></tr>
+    </table>
+
+    <h3>Set Relations</h3>
+    <table>
+      <tr><th>Syntax</th><th>Meaning</th><th>Example</th></tr>
+      <tr><td><code>x in S</code></td><td>Membership</td><td><code>a in S cup T</code></td></tr>
+      <tr><td><code>S subset T</code></td><td>Subset</td><td><code>A cap B subset A</code></td></tr>
+      <tr><td><code>S sameset T</code></td><td>Set equality</td><td><code>A cup B sameset B cup A</code></td></tr>
+    </table>
+
+    <h2 id="precedence">Operator Precedence</h2>
+    <p>From tightest to loosest binding:</p>
+
+    <h3>Proposition Precedence</h3>
+    <table>
+      <tr><th>Precedence</th><th>Operators</th><th>Associativity</th></tr>
+      <tr><td>1 (tightest)</td><td><code>not</code></td><td>Right</td></tr>
+      <tr><td>2</td><td><code>and</code></td><td>Left</td></tr>
+      <tr><td>3</td><td><code>or</code></td><td>Left</td></tr>
+      <tr><td>4</td><td><code>-></code>, <code>&lt;-></code></td><td>Right</td></tr>
+      <tr><td>5 (loosest)</td><td><code>forall</code>, <code>exists</code></td><td>Right</td></tr>
+    </table>
+    <p>Use parentheses to override precedence: <code>(P or Q) and R</code>.</p>
+
+    <h3>Expression Precedence</h3>
+    <table>
+      <tr><th>Precedence</th><th>Operators</th></tr>
+      <tr><td>1 (tightest)</td><td><code>^</code> (exponentiation)</td></tr>
+      <tr><td>2</td><td><code>*</code> (multiplication)</td></tr>
+      <tr><td>3</td><td>Unary <code>-</code> (negation)</td></tr>
+      <tr><td>4 (loosest)</td><td><code>+</code>, <code>-</code> (addition, subtraction)</td></tr>
+    </table>
+
+    <h3>Set Precedence</h3>
+    <table>
+      <tr><th>Precedence</th><th>Operators</th></tr>
+      <tr><td>1 (tightest)</td><td><code>~</code> (complement)</td></tr>
+      <tr><td>2</td><td><code>cap</code>, <code>\</code> (intersection, difference)</td></tr>
+      <tr><td>3 (loosest)</td><td><code>cup</code> (union)</td></tr>
+    </table>
+
+    <h2 id="definitions-syntax">Writing Definitions</h2>
+    <p>Definitions are entered in the Definitions field of the theorem panel, one per line.
+      Each definition has the format:</p>
+    <pre><code>Name: forall vars, Name(args) &lt;-> body</code></pre>
+    <p>The proposition must be a universally quantified biconditional. Examples:</p>
+    <pre><code>Even: forall n, Even(n) &lt;-> (exists k, n = 2*k)
+Odd: forall n, Odd(n) &lt;-> (exists k, n = 2*k+1)
+Divides: forall a, forall b, Divides(a, b) &lt;-> (exists k, b = k*a)</code></pre>
+
+    <h2 id="theorems-syntax">Writing Theorems</h2>
+    <p>Theorems are entered in the Theorems field, one per line:</p>
+    <pre><code>Name: forall vars, hypothesis -> conclusion</code></pre>
+    <p>The proposition must be a universally quantified implication. Examples:</p>
+    <pre><code>MultEqns: forall a, forall b, forall c, forall d, (a = b and c = d) -> (a*c = b*d)
+DivCancel: forall a, forall b, forall c, (c*a = c*b and not (c = 0)) -> (a = b)</code></pre>
+
+    <h2 id="line-references">Line References in Rules</h2>
+    <p>When writing forward rules, you reference earlier proof lines by number.
+      Cozy supports two kinds of references:</p>
+
+    <h3>Absolute References</h3>
+    <p>Use dot-separated numbers to refer to any line in the proof:</p>
+    <table>
+      <tr><th>Reference</th><th>Meaning</th></tr>
+      <tr><td><code>1</code></td><td>Line 1 of the main proof</td></tr>
+      <tr><td><code>3</code></td><td>Line 3 of the main proof</td></tr>
+      <tr><td><code>3.2</code></td><td>Line 2 of the subproof at line 3</td></tr>
+      <tr><td><code>3.2.1</code></td><td>Line 1 of the sub-subproof at line 3.2</td></tr>
+    </table>
+
+    <h3>Relative References</h3>
+    <p>Use <code>^</code> to refer to lines relative to the current proof level:</p>
+    <table>
+      <tr><th>Reference</th><th>Meaning</th></tr>
+      <tr><td><code>^1</code></td><td>Line 1 of the parent proof</td></tr>
+      <tr><td><code>^^1</code></td><td>Line 1 of the grandparent proof</td></tr>
+    </table>
+
+    <div class="info-box tip">
+      <strong>Tip</strong>
+      Relative references are useful in deeply nested subproofs when you need to
+      reference a line from an enclosing proof without counting the full path.
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started - Cozy</title>
+  <link rel="stylesheet" href="docs.css">
+  <link rel="icon" href="../img/cozy-logo.png">
+</head>
+<body>
+
+<div class="titlebar">
+  <img src="../img/cozy-logo.png" alt="Cozy" class="logo">
+  <h1><a href="index.html">Cozy</a></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="getting-started.html">Getting Started</a>
+    <a href="language.html">Language</a>
+    <a href="rules.html">Proof Rules</a>
+    <a href="ui-guide.html">UI Guide</a>
+  </nav>
+</div>
+
+<div class="page-wrapper">
+  <nav class="sidebar">
+    <div class="section-title">Getting Started</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#your-first-proof">Your First Proof</a></li>
+      <li><a href="#step1">Step 1: State the Theorem</a></li>
+      <li><a href="#step2">Step 2: Enter the Proof Editor</a></li>
+      <li><a href="#step3">Step 3: Apply Rules</a></li>
+      <li><a href="#step4">Step 4: Complete the Proof</a></li>
+      <li><a href="#next-steps">Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <h2 id="overview">Overview</h2>
+    <p>Cozy is an interactive proof assistant designed for students learning formal logic.
+      It lets you construct proofs step by step using standard inference rules, with
+      real-time feedback that tells you immediately whether each step is valid.</p>
+
+    <p>Cozy supports:</p>
+    <ul>
+      <li><strong>Propositional logic</strong> &mdash; and, or, not, implies, iff, true, false</li>
+      <li><strong>Predicate logic</strong> &mdash; forall and exists quantifiers, custom predicates</li>
+      <li><strong>Arithmetic</strong> &mdash; integer expressions with +, -, *, ^, and comparisons</li>
+      <li><strong>Set theory</strong> &mdash; union, intersection, complement, subset, membership</li>
+      <li><strong>Induction</strong> &mdash; mathematical induction on natural numbers</li>
+      <li><strong>Algebra</strong> &mdash; automated decision procedure for linear arithmetic</li>
+    </ul>
+
+    <h2 id="your-first-proof">Your First Proof</h2>
+    <p>Let's walk through proving a simple theorem: <strong>if P and Q, then Q and P</strong>.</p>
+
+    <h3 id="step1">Step 1: State the Theorem</h3>
+    <p>When Cozy loads, you see the <strong>Theorem Definition Panel</strong>. This is where
+      you specify what you want to prove.</p>
+
+    <img src="img/screenshot-theorem-empty.png" alt="Empty theorem definition panel showing Given, Prove, Rules, Variables, Definitions, and Theorems fields" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <ol>
+      <li>Click the <strong>+</strong> button next to "Given" to add a hypothesis.</li>
+      <li>Type <code>P and Q</code> in the Given field.</li>
+      <li>In the <strong>Prove</strong> field, type <code>Q and P</code>.</li>
+    </ol>
+
+    <p>The fields turn red if your input has a syntax error. Once both fields have valid
+      propositions, the <strong>Try It</strong> button becomes active.</p>
+
+    <img src="img/screenshot-theorem-filled.png" alt="Theorem panel with P and Q as given and Q and P as the goal" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <h3 id="step2">Step 2: Enter the Proof Editor</h3>
+    <p>Click <strong>Try It</strong> to enter the proof editor. You'll see:</p>
+    <ul>
+      <li>A <strong>preamble</strong> showing the allowed rules, known variables, and known theorems.</li>
+      <li>The <strong>given</strong> fact <code>P and Q</code> on line 1.</li>
+      <li>A <strong>forward working line</strong> where you can derive new facts.</li>
+      <li>A <strong>backward working line</strong> showing the goal <code>Q and P</code> that still needs proof.</li>
+    </ul>
+
+    <img src="img/screenshot-proof-initial.png" alt="Proof editor showing given P and Q, a forward input, and the backward goal Q and P" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <h3 id="step3">Step 3: Apply Rules</h3>
+    <p>We'll use <strong>forward reasoning</strong> to derive Q and P from our given P and Q:</p>
+
+    <ol>
+      <li>In the forward working line, start typing <code>elim and</code>.
+        The auto-suggest dropdown will offer completions.</li>
+      <li>Complete the rule: <code>elim and 1 right</code>. This extracts <code>Q</code>
+        from line 1 (P and Q), taking the right side.</li>
+      <li>On the next forward working line, type <code>elim and 1 left</code> to extract
+        <code>P</code>.</li>
+      <li>Now type <code>intro and 2 3</code> to combine Q (line 2) and P (line 3) into
+        <code>Q and P</code>.</li>
+    </ol>
+
+    <img src="img/screenshot-proof-complete.png" alt="Completed proof showing lines 1-4 with Proof Complete message" style="max-width:100%; border:1px solid #e0e0e0; border-radius:6px;">
+
+    <h3 id="step4">Step 4: Complete the Proof</h3>
+    <p>Once Cozy detects that a forward line matches the goal, it displays a green
+      <strong>"Your proof is complete."</strong> message. You can then:</p>
+    <ul>
+      <li>Click <strong>Show LaTeX</strong> to see a formal LaTeX rendering of your proof.</li>
+      <li>Toggle between <strong>HTML</strong> and <strong>Text</strong> view modes using
+        the radio buttons.</li>
+      <li>Click <strong>Back</strong> to return to the theorem panel and try another proof.</li>
+    </ul>
+
+    <h2 id="next-steps">Next Steps</h2>
+    <ul>
+      <li>Learn the full <a href="language.html">declarations language syntax</a> for writing
+        propositions and expressions.</li>
+      <li>See the complete <a href="rules.html">proof rules reference</a> for all available
+        inference rules.</li>
+      <li>Read the <a href="ui-guide.html">UI guide</a> for a detailed explanation of every
+        part of the interface.</li>
+      <li>Work through more <a href="examples.html">examples</a> to build confidence.</li>
+    </ul>
+
+  </div>
+</div>
+
+</body>
+</html>
