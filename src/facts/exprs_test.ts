@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as exprs from './exprs';
 import { Expression, Constant, Variable, Call } from './exprs';
+import { ParseExpr } from './exprs_parser';
 
 
 const zero = Constant.of(0n);
@@ -432,6 +433,13 @@ describe('exprs', function() {
 
     let expr12: Expression = expr11.normalize();
     assert.strictEqual(expr12.to_string(), "2*a + 2*b + (-2)*y");
+
+    let expr13: Expression = ParseExpr("(n+1)*(n*(n+1)+1*(n+1)+2)");
+    let expr14: Expression = expr13.normalize();
+    assert.strictEqual(expr14.to_string(), "3 + 5*n + 3*n^2 + n^3");
+
+    let expr15: Expression = ParseExpr("(n+1)*(n^2+n+n+1+2)");
+    assert.ok(expr14.equals(expr15.normalize()));
   });
 
 });

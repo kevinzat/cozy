@@ -471,6 +471,17 @@ describe('rules', function() {
 
     const res4 = new Algebra(ENV, ParseProp("1 - 1 = 0"))
     assert.strictEqual(res4.apply().to_string(), "1 - 1 = 0");
+
+    const env2 = new TopLevelEnv([], [], undefined, ["n", "q"]);
+    const assn5 = new Given(
+        env2, ParseProp("(n+1)*(n^2+n+n+1+2) = 3*(q+n^2+n+1)"));
+    const res5 = new Algebra(
+        env2,
+        ParseProp("(n+1)*(n*(n+1)+1*(n+1)+2) = 3*(q+n^2+n+1)"),
+        assn5);
+    assert.strictEqual(
+        res5.apply().to_string(),
+        "(n + 1)*(n*(n + 1) + 1*(n + 1) + 2) = 3*(q + n^2 + n + 1)");
   });
 
   it('algebra – constant equations, no variables', function() {

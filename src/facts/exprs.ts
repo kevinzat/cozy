@@ -80,11 +80,17 @@ export abstract class Expression {
     expr = expr.remove_exponents();
     expr = expr.remove_negation();
     expr = expr.associate();
-    expr = expr.distribute();
-    expr = expr.associate();  // distribute can produce products of products
-    expr = expr.combine_arguments();
-    expr = expr.apply_identities();
-    return expr;
+    for (let i = 0; i < 20; i++) {
+      const next = expr.distribute().associate();
+      if (next.equals(expr)) {
+        expr = next;
+        expr = expr.combine_arguments();
+        expr = expr.apply_identities();
+        return expr;
+      }
+      expr = next;
+    }
+    throw new Error(`expression normalization did not converge after 20 distribution passes`);
   }
 
   /** Returns this expression but evaluating any expressions with known values. */
